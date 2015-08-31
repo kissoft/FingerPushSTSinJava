@@ -30,6 +30,5 @@ Fingerpush Server to Server API 로는 크게 다음과 같은 처리를 할 수
 
 테스트 환경은 아래와 같은 환경에서 테스트 하였습니다.
 
-JRE 1.8.0_45
-Tomcat 8.0
+JRE 1.8.0_45 , Tomcat 8.0
 
