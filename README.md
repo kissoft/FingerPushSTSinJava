@@ -95,7 +95,7 @@ FingerpushDaoImple.sendHttpsExe(String callUrl, List <BasicNameValuePair> params
 	1.5 발송 메소드 호출
 		pushDao.sendAllDevice(push);
 
-		- 처리가 완료되면 결과 값으로 json 형태의 값을 받아 옵니다. (결과 코드는 매뉴얼을 확인해 주세요.)
+	- 처리가 완료되면 결과 값으로 json 형태의 값을 받아 옵니다. (결과 코드는 매뉴얼을 확인해 주세요.)
 		ex) {“result” : “200”, “message” : “정상 처리되었습니다.”,  “tokenCnt” : “15”}
 
 2. 타겟팅 단일건 발송.  (참조 파일 : sendTargetOne.jsp, 참조 메소드 : FingerpushDaoImpl.sendTargetPush(PushVO push)) 타겟팅 발송이 일괄 발송과 다른점은 호출되는 API URL 과 해당 메시지를 수신할 대상 식별자 정보를 파라미터로 전송한다는 점입니다.
@@ -114,7 +114,8 @@ FingerpushDaoImple.sendHttpsExe(String callUrl, List <BasicNameValuePair> params
 		pushDao.sendTargetPush(push);
 		
 - 처리가 완료되면 결과 값으로 json 형태의 값을 받아 옵니다. (결과 코드는 매뉴얼을 확인해 주세요.)
-ex) {“result” : “200”, “msgIdx” :  “A1DS33DDSQ2321”, “processCode” : “20003”, “message” : “메시지 등록이 완료 되었습니다.”}
+ 
+	ex) {“result” : “200”, “msgIdx” :  “A1DS33DDSQ2321”, “processCode” : “20003”, “message” : “메시지 등록이 완료 되었습니다.”}
 
 	단일건 발송에서 유의할 점은, 다수의 대상자들에게 메시지 를 발송하는 용도로 사용하여 API서버에 부하를 주는 경우 해당 계정이 차단 당할 수 있습니다.
 	이러한 다수 대상자들에게 발송하는 경우에는 3. 타켓팅 다중건 발송 기능을 이용해 주시기 바랍니다.
@@ -155,7 +156,7 @@ ex) {“result” : “200”, “msgIdx” :  “A1DS33DDSQ2321”, “processC
 	
 		pushDao.sendTargetMore(push, userList, messList);
 - 처리가 완료되면 결과 값으로 json 형태의 값을 받아 옵니다. (결과 코드는 매뉴얼을 확인해 주세요.)
-ex) {“result” : “200”, “msgIdx” :  “A1DS33DDSQ2321”, “processCode” : “20003”, “message” : “메시지 등록이 완료 되었습니다.”}
+	ex) {“result” : “200”, “msgIdx” :  “A1DS33DDSQ2321”, “processCode” : “20003”, “message” : “메시지 등록이 완료 되었습니다.”}
 
 	위에서 설명한 JSP 샘플만을 보자면, 다수건 발송의 경우에도 단일건 발송과 그다지 크게 다르지 않습니다. 
 
@@ -179,13 +180,14 @@ ex) {“result” : “200”, “msgIdx” :  “A1DS33DDSQ2321”, “processC
 		// 첫번째 메세지 기본정보를 보내면 메시지가 등록되고, 결과 값을 받아 오게 됩니다.
 		jsonString = sendMessage("API URL 주소", params);
 
-		결과값 > ex) {“result” : “200”, “msgIdx” :  “A1DS33DDSQ2321”, “processCode” : “20001”, “message” : “메시지 등록이 처리되었습니다. 발급받은 메시지 아이디로 대상자 등록을 시작해 주세요.”}
+	결과값 > 
+		ex) {“result” : “200”, “msgIdx” :  “A1DS33DDSQ2321”, “processCode” : “20001”, “message” : “메시지 등록이 처리되었습니다. 발급받은 메시지 아이디로 대상자 등록을 시작해 주세요.”}
 		
-		일단 메시지가 등록되면 API 서버에서는 해당 메시지를 Transaction 상태로 만들고 대상자 및 메시지 입력을 기다립니다.
+	일단 메시지가 등록되면 API 서버에서는 해당 메시지를 Transaction 상태로 만들고 대상자 및 메시지 입력을 기다립니다.
 
 	둘째, 처리 결과를 확인하여 결과 값이 정상이면 처리 결과에 포함된 msgIdx 와 수신받을 대상자 및 해당 대상자들이  수신받을 메시지를 셋팅하여 API서버로 보냅니다
 		결과값(result)이 200 이고, 프로세스 코드(processCode) 가 20001이면 수신 대상자 및 수신 메시지를 파라미터에 담아 전달 합니다.
-		서버는 기본적으로 한번 전달에 500건까지의 식별자를 받아 주므로 이보다 많을 경우 일정 수만큼 나누어 API서버로 전달 합니다.
+	서버는 기본적으로 한번 전달에 500건까지의 식별자를 받아 주므로 이보다 많을 경우 일정 수만큼 나누어 API서버로 전달 합니다.
 
 		아래는 500건 단위로 아래 방식을 한번씩 처리할 수 있도록 한 메소드 내부 입니다.
 
@@ -216,7 +218,8 @@ ex) {“result” : “200”, “msgIdx” :  “A1DS33DDSQ2321”, “processC
 		jsonString = sendHttpsExe(push.getCallUrl(), params);
 		
 		
-		결과값 >  ex) {“result” : “200”, “msgIdx” :  “A1DS33DDSQ2321”, “processCode” : “20002”, “message” : “대상자 등록이 처리되었습니다. 대상자를 계속 등록하실수도, 메시지 등록을 완료 하실 수도 있습니다.”}
+	결과값 >  
+		ex) {“result” : “200”, “msgIdx” :  “A1DS33DDSQ2321”, “processCode” : “20002”, “message” : “대상자 등록이 처리되었습니다. 대상자를 계속 등록하실수도, 메시지 등록을 완료 하실 수도 있습니다.”}
 
 	셋째, 처리 결과를 확인하여 결과 값이 정상이면 앞서 받은 msgIdx 와 메시지 발송 종료 플래그를 담아 API 서버로 보내면 발송 과정이 완료됩니다.
 		모든 대상자셋을 서버에 전달하였다면, 해당 Transaction 을 종료한다는 플래그를 담아 전달 해야 합니다.
