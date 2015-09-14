@@ -110,7 +110,7 @@ FingerpushDaoImple.sendHttpsExe(String callUrl, List <BasicNameValuePair> params
 
 	2.4. 역시 부가정보에 대한 셋팅이 필요하다면, 부가정보를 셋팅합니다. 단 타겟메시지의 경우 long text push 를 지원하지 않습니다.
 	
-	2.5 발송 메소드 호출
+	2.5 발송 메소드 호출 
 	
 		pushDao.sendTargetPush(push);
 		
