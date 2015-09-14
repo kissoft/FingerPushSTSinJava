@@ -39,7 +39,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	
 	
 	@Override
-	public String sendMessAll(PushVO push)
+	public String sendAllDevice(PushVO push)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
 		String jsonString  = "";			// 서버로 발송 후 결과 메시지
 		JSONObject obj = new JSONObject();		
@@ -76,151 +76,21 @@ public class FingerpushDaoImpl implements FingerpushDao{
 		return jsonString;
 	}	
 	
-	@Override
-	public String sendUnderMax(PushVO push, ArrayList<String> userList)
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
-		String jsonString  = "";
-		
-        // 파라미터 설정
-        List <BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(); 
-        params = setParams(push, params);														// 푸시 메시지 기본 정보 셋팅
-        
-        params.add (new BasicNameValuePair("msg", push.getMsg()));			// 메시지 셋팅 (필수)
-        
-        // 대상자 셋팅
-        for(int i=0; i<userList.size(); i++){
-        	params.add (new BasicNameValuePair("identity", (String)userList.get(i)));
-        }
-        
-        // 발송 완료 처리 - 계속 보내고 싶다면 message id 저장 후 해당 메시지 아이디로 대상자 전송.
-        params.add (new BasicNameValuePair("isfinish", "Y"));      
-        jsonString = sendHttpsExe(push.getCallUrl(), params);	       
-        
-		return jsonString;		
-	}
-	
-	
 	
 	@Override
-	public String sendUnderMax(PushVO push, ArrayList<String> userList, ArrayList<String> messList)
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
-		String jsonString  = "";
-		
-        // 파라미터 설정
-        List <BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(); 
-        params = setParams(push, params);		        // 푸시 메시지 기본 정보 셋팅
-        
-        
-        // 대상자 셋팅
-        for(int i=0; i<userList.size(); i++){
-        	params.add (new BasicNameValuePair("identity", (String)userList.get(i)));
-        }
-        
-        // 메시지 셋팅
-        for(int i=0; i<messList.size(); i++){
-        	if(i==0){
-                // 메시지 설정
-                params.add (new BasicNameValuePair("msg", messList.get(i)));		// 메시지 (필수) : 필수 값이므로 첫번째 메시지를 대표메시지 임의 셋팅
-        	}
-        	params.add (new BasicNameValuePair("message", (String)messList.get(i)));
-        }        
-        
-        // 발송 완료 처리 - 계속 보내고 싶다면 message id 저장 후 해당 메시지 아이디로 대상자 전송.
-        params.add (new BasicNameValuePair("isfinish", "Y"));            		
-		
-        jsonString = sendHttpsExe(push.getCallUrl(), params);		
-        
-        return jsonString;
-	}	
-	
-	/**
-	 * 500 건 이상 발송 테스트 : 동일 메시지
-	 *    step 1. 메시지 발송 - 메시지 일련번호 취득
-	 *    step 2. 대상자 발송 (반복)
-	 *    step 3. 메시지 전송 완료 플래그 발송
-	 *   
-	 *    해당 예제 소스는 발송 방법의 이해를 위한 샘플입니다.
-	 *    500건 이상 발송의 경우, 발송 용량 등에 따라 메모리 및 프로세스 효율 등을 고려하여 해당 프로세스를 외부로 빼서 각기 환경에 맞게 변경할 필요가 있습니다.
-	 *    중요한 것은 위 Step 1~3 단계 입니다.
-	 *    
-	 */
-	@Override
-	public String sendOverMax(PushVO push, ArrayList<String> userList)
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
-		String tmess = "";
-		String jsonString  = "";
-		
-        // 파라미터 설정
-        List <BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(); 
-        params = setParams(push, params);		        // 푸시 메시지 기본 정보 셋팅
-        params.add (new BasicNameValuePair("msg", push.getMsg()));			// 메시지 셋팅 (필수) - 동일 메시지
-        
-		// step 1. 메시지 등록 - 등록 후 메시지 번호 확인.( 해당 메시지 번호는 단계별 발송에 반드시 필요합니다)
-		jsonString = sendMessage(push.getCallUrl(), params);		
-	    JSONObject jsonObj = JSONObject.fromObject(jsonString);
-	    
-	    String result = (String)jsonObj.get("result");								// 결과 코드
-	    String msgIdx = (String)jsonObj.get("msgIdx");							// 메시지 등록 후 반환되는 메시지 번호
-	    String processCode = (String)jsonObj.get("processCode");		// 메시지 발송 단계, 20001 메시지 등록 시작, 20002 대상자 설정, 20003 메시지 설정 완료
-	    String message = (String)jsonObj.get("message");					// 반환된 결과 메시지
-        
-	    
-	    push.setMsgIdx(msgIdx);															// 메시지 번호를 셋팅 한다.  (필수)
-	    	    
-	   // logger.debug("msg idx : "+msgIdx);
-	    
-	    // step 2. 대상자 발송 : 500 건씩 나누어 발송 한다 (500건-한번에 등록 가능한 식별자 수 --> 중요)
-	    if(result.equals("200") && processCode.equals("20001")){
-	    	
-	    	
-	    	ArrayList departList = separateArray(userList, 500);
-	    	logger.debug("action coutn : "+departList.size());
-	    	
-	    	for(int i=0; i<departList.size(); i++){
-	    		ArrayList<String> targetList = (ArrayList)departList.get(i);
-	    		
-	    		// 대상 목록 발송 : 동일 메시지 일경우에는 메시지 리스트를 비워 보낸다.(초기 메시지 셋팅시 처리된 내용이 발송 됨.)
-	    		String tmpMessage = sendTargetList(push, targetList, null); 
-	    		jsonObj = JSONObject.fromObject(tmpMessage);
-	    	    logger.debug("target process : "+tmpMessage);
-	    	    
-	    	    result = (String)jsonObj.get("result");								// 결과 코드
-	    	    msgIdx = (String)jsonObj.get("msgIdx");							// 메시지 등록 후 반환되는 메시지 번호
-	    	    processCode = (String)jsonObj.get("processCode");		// 메시지 발송 단계, 20001 메시지 등록 시작, 20002 대상자 설정, 20003 메시지 설정 완료
-	    	    message = (String)jsonObj.get("message");					// 반환된 결과 메시지
-	    	    
-	    	    // result 값이 200이 아닐 경우 해당 식별자 리스트 처리에 대해 오류가 난 것이므로 별도 로그/혹은 예외 처리 등이 필요하다.
-	    	    
-	    	    
-	    	    jsonString = tmpMessage;
-	    	}
-	    }
-	    
-	    // step 3. 메시지 전송 완료 플래그 발송
-	    if(result.equals("200") && processCode.equals("20002")){
-	    	
-	    	String tmpMessage2 = sendFinish(push);
-    		jsonObj = JSONObject.fromObject(tmpMessage2);
-    	    
-    	    jsonString = tmpMessage2;
-	    }	 
-        
-		return jsonString;
-	}
-
-	@Override
-	public String sendOverMax(PushVO push, ArrayList<String> userList, ArrayList<String> messList)
+	public String sendTargetMore(PushVO push, ArrayList<String> userList, ArrayList<String> messList)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
 		String tmess = "";
 		String jsonString = "";
-		String strMess = "";
-
+		String strMess = "";		
         // 파라미터 설정
         List <BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(); 
         params = setParams(push, params);		        // 푸시 메시지 기본 정보 셋팅
+        
+        push.setMsg(messList.get(0));																// 첫번째 메시지가 기본 메시지가 됨.
         params.add (new BasicNameValuePair("msg", push.getMsg()));			// 메시지 셋팅 (필수) - 동일 메시지
         
-		// step 1. 메시지 등록 - 등록 후 메시지 번호 확인.( 해당 메시지 번호는 단계별 발송에 반드시 필요합니다)
+		// >>>>>>>>>>>>>>>>>>> step 1. 메시지 등록 - 등록 후 메시지 번호 확인.( 해당 메시지 번호는 단계별 발송에 반드시 필요합니다)
 		jsonString = sendMessage(push.getCallUrl(), params);		
 	    JSONObject jsonObj = JSONObject.fromObject(jsonString);
 	    
@@ -232,7 +102,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	    push.setMsgIdx(msgIdx);															// 메시지 번호를 셋팅 한다.  (필수)
 	        
 	    
-	    // step 2. 대상자 발송 : 500 건씩 나누어 발송 한다 (500건-한번에 등록 가능한 식별자 수 --> 중요)
+	    // >>>>>>>>>>>>>>>>>> step 2. 대상자 발송 : 500 건씩 나누어 발송 한다 (500건-한번에 등록 가능한 식별자 수 --> 중요)
 	    if(result.equals("200") && processCode.equals("20001")){
 	    	// 대상자 목록과 대상자별로 받을 메시지의 길이가 다를 경우 발송되지 않습니다.
 	    	ArrayList departList = separateArray(userList, 500);					// 대상자 나누기
@@ -262,19 +132,18 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	    	}
 	    }	    	    
 	    	    
-	    // step 3. 메시지 전송 완료 플래그 발송
+	    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  step 3. 메시지 전송 완료 플래그 발송
 	    if(result.equals("200") && processCode.equals("20002")){
-	    	
 	    	String tmpMessage2 = sendFinish(push);
     		jsonObj = JSONObject.fromObject(tmpMessage2);
-    	    
+    	        		
     	    jsonString = tmpMessage2;
 	    }	
         
 		return jsonString;
 	}
 	
-	// 발송 완료 처리 : 500건 이상일경우
+	// 발송 완료 처리
 	public String sendFinish(PushVO push)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException
 	{
@@ -290,7 +159,6 @@ public class FingerpushDaoImpl implements FingerpushDao{
         params.add (new BasicNameValuePair("isfinish", "Y"));									// 발송 완료 처리
         
         jsonString = sendHttpsExe(push.getCallUrl(), params);
-
 		          
 		return jsonString;			
 	}		
@@ -328,7 +196,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	}
 	
 	/**
-	 * 메시지 발송 - 타겟팅 단일건/500건이상 에서 사용
+	 * 메시지 발송 - 타겟팅에서 사용
 	 * @param callUrl
 	 * @param params
 	 * @return
@@ -342,7 +210,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 		return sendHttpsExe(callUrl, params);
 	}
 	
-	// 대상 리스트 발송 : 500 건 이상일경우
+	// 대상 리스트 발송 : 다중 건일 경우
 	/**
 	 * 대상 리스트 발송
 	 * @param strAppkey

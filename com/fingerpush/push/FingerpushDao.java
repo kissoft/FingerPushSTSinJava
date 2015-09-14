@@ -20,48 +20,6 @@ public interface FingerpushDao {
 	public String sendTargetPush(PushVO push) throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException ;
 	
 	/**
-	 * 타겟팅/500건 이하/동일 메시지  : 	단일건 발송과 callUrl 이 다름
-	 * @param push
-	 * @param userList
-	 * @return
-	 * @throws NoSuchAlgorithmException
-	 * @throws KeyManagementException
-	 * @throws ClientProtocolException
-	 * @throws IOException
-	 */
-	public String sendUnderMax(PushVO push, ArrayList<String> userList)
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException;
-	
-	
-	/**
-	 * 타겟팅/500건 이하/각기 다른 메시지  : 	단일건 발송과 callUrl 이 다름
-	 * @param push
-	 * @param callUrl
-	 * @param userList
-	 * @param messList
-	 * @return
-	 * @throws NoSuchAlgorithmException
-	 * @throws KeyManagementException
-	 * @throws ClientProtocolException
-	 * @throws IOException
-	 */
-	public String sendUnderMax(PushVO push, ArrayList<String> userList, ArrayList<String> messList)
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException;
-	
-	/**
-	 * 타겟팅/500건 이상/동일 메시지  : 	단일건 발송과 callUrl 이 다름
-	 * @param push
-	 * @param userList
-	 * @return
-	 * @throws NoSuchAlgorithmException
-	 * @throws KeyManagementException
-	 * @throws ClientProtocolException
-	 * @throws IOException
-	 */
-	public String sendOverMax(PushVO push, ArrayList<String> userList)
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException;
-
-	/**
 	 * 타겟팅/500건 이상/각기 다른 메시지  : 	단일건 발송과 callUrl 이 다름
 	 * @param push
 	 * @param userList
@@ -72,9 +30,9 @@ public interface FingerpushDao {
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 */
-	public String sendOverMax(PushVO push, ArrayList<String> userList, ArrayList<String> messList)
+	public String sendTargetMore(PushVO push, ArrayList<String> userList, ArrayList<String> messList)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException;
-	
+		
 	
 	/**
 	 * 활성화된 모든 디바이스에 일괄 발송
@@ -85,6 +43,6 @@ public interface FingerpushDao {
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 */
-	public String sendMessAll(PushVO push) 
+	public String sendAllDevice(PushVO push) 
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException;
 }
