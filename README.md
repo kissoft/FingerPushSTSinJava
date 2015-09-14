@@ -96,6 +96,7 @@ FingerpushDaoImple.sendHttpsExe(String callUrl, List <BasicNameValuePair> params
 		pushDao.sendAllDevice(push);
 
 	- 처리가 완료되면 결과 값으로 json 형태의 값을 받아 옵니다. (결과 코드는 매뉴얼을 확인해 주세요.)
+	
 			ex) {“result” : “200”, “message” : “정상 처리되었습니다.”,  “tokenCnt” : “15”}
 
 2. 타겟팅 단일건 발송.  (참조 파일 : sendTargetOne.jsp, 참조 메소드 : FingerpushDaoImpl.sendTargetPush(PushVO push)) 타겟팅 발송이 일괄 발송과 다른점은 호출되는 API URL 과 해당 메시지를 수신할 대상 식별자 정보를 파라미터로 전송한다는 점입니다.
