@@ -32,8 +32,12 @@ Fingerpush Server to Server API 로는 크게 다음과 같은 처리를 할 수
 
 HttpClient 를 이용한 SSL 통신 방법은 구글링을 통해 쉽게 확인할 수 있으니, 넘어가기로 합니다.
 
-단, 해당 방식이 적용된 SSL 통신 처리 메소드는 샘플 소스의 FingerpushDaoImple.sendHttpsExe(String callUrl, List <BasicNameValuePair> params)
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException  에 구현되어 있으며
+단, 해당 방식이 적용된 SSL 통신 처리 메소드는 샘플 소스의 
+
+FingerpushDaoImple.sendHttpsExe(String callUrl, List <BasicNameValuePair> params)
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException  
+			
+에 구현되어 있으며
 
 해당 방식은 X509TrustManager를 이용해 SSLContext를 생성하고, ClientConnectionManager와 SchemeRegistry에 SSLSocketFactory를 등록하여 처리하는 방식입니다.
 
@@ -49,17 +53,20 @@ HttpClient 를 이용한 SSL 통신 방법은 구글링을 통해 쉽게 확인�
 
 	처리 방식은,
 	1.1 객체 선언
+	
 		PushVO push = new PushVO();
 		FingerpushDao pushDao = new FingerpushDaoImpl();
+		
 	1.2 필수 기본값 셋팅	
-		해당 값들은 Fingerpush 서비스에 Pro 계정 이상으로 가입한 경우 발급된 값들을 셋팅 합니다.
+	해당 값들은 Fingerpush 서비스에 Pro 계정 이상으로 가입한 경우 발급된 값들을 셋팅 합니다.
+		
 		push.setCallUrl("https://www.fingerpush.com/rest/sts/v1/setFingerPush.jsp");		// 일괄발송 호출 경로
 		push.setAppKey("RY4R______________________KS");						// 발급받은 Appkey
 		push.setAppSecret("MF______________________auv5P");					// 발급받은 AppSecret
 		push.setCustomerKey("y_________pSS");							// 발급 받은 customer key - Pro 이상의 서비스 사용시
 
-	1.3 수신 받을 메시지 등록 : 메시지가 길거나, HTML 태그를 포함한 경우 부가정보 파라미터의 mode 값을 'LNGT' 로 셋팅하고 msg에는 해당 긴~ 내용의 요약 정보만 등록합니다.
-				    또한, 실제 내용자체는 부가정보의 lngt_message 에 셋팅하여 전송 합니다.
+	1.3 수신 받을 메시지 등록 : 메시지가 길거나, HTML 태그를 포함한 경우 부가정보 파라미터의 mode 값을 'LNGT' 로 셋팅하고 msg에는 해당 긴~ 내용의 요약 정보만 등록합니다. 또한, 실제 내용자체는 부가정보의 lngt_message 에 셋팅하여 전송 합니다.
+				    
 		push.setMsg("Hello World !");								// 발송할 푸시 메시지
 		/* long text message 일 경우
 		push.setMsg("긴내용을 표현할 짧은 제목");
@@ -67,8 +74,7 @@ HttpClient 를 이용한 SSL 통신 방법은 구글링을 통해 쉽게 확인�
 		push.Lngt_message("아주아주 긴~ 메시지 ... 중략 ... 태그도 넣어 발송 가능합니다.");
 		*/
 
-	1.4 부가 정보 셋팅 : 앱에서 다양한 효과처리를 위한 파라미터 들을 셋팅합니다. 해당 부가정보를 넣지 않을 경우 기본값으로 셋팅되어 전달되며, 해당 부가 정보처리는 앱에서도
-			      해당 메시지 수신시 처리가 되어 있어야 합니다. 각각의 파라미터의 역할은 매뉴얼을 참조하시기 바랍니다.
+	1.4 부가 정보 셋팅 : 앱에서 다양한 효과처리를 위한 파라미터 들을 셋팅합니다. 해당 부가정보를 넣지 않을 경우 기본값으로 셋팅되어 전달되며, 해당 부가 정보처리는 앱에서도 해당 메시지 수신시 처리가 되어 있어야 합니다. 각각의 파라미터의 역할은 매뉴얼을 참조하시기 바랍니다.
 
 		push.setIsa("Y");						// Android 디바이스에 발송 Y/N : default - Y
 		push.setIsi("Y");						// IOS 디바이스에 발송 Y/N : default - Y	
@@ -92,23 +98,23 @@ HttpClient 를 이용한 SSL 통신 방법은 구글링을 통해 쉽게 확인�
 		- 처리가 완료되면 결과 값으로 json 형태의 값을 받아 옵니다. (결과 코드는 매뉴얼을 확인해 주세요.)
 		ex) {“result” : “200”, “message” : “정상 처리되었습니다.”,  “tokenCnt” : “15”}
 
-
-
-2. 타겟팅 단일건 발송.  (참조 파일 : sendTargetOne.jsp, 참조 메소드 : FingerpushDaoImpl.sendTargetPush(PushVO push))
-	타겟팅 발송이 일괄 발송과 다른점은 호출되는 API URL 과 해당 메시지를 수신할 대상 식별자 정보를 파라미터로 전송한다는 점입니다.
+2. 타겟팅 단일건 발송.  (참조 파일 : sendTargetOne.jsp, 참조 메소드 : FingerpushDaoImpl.sendTargetPush(PushVO push)) 타겟팅 발송이 일괄 발송과 다른점은 호출되는 API URL 과 해당 메시지를 수신할 대상 식별자 정보를 파라미터로 전송한다는 점입니다.
 
 	2.1, 2.2 객체 선언 및 필수 기본값 셋팅은 일괄 발송과 처리 방식이 동일 합니다.
 
 	2.3. 수신 받을 식별자와 해당 수신자가 받을 메시지를 셋팅 합니다.
+	
 		push.setIdentity("대상식별자");					// 푸시 메시지 수신 대상
 		push.setMsg("배*진 고객님, 회원 가입에 감사드립니다.");		// 발송할 푸시 메시지
 
 	2.4. 역시 부가정보에 대한 셋팅이 필요하다면, 부가정보를 셋팅합니다. 단 타겟메시지의 경우 long text push 를 지원하지 않습니다.
 	
 	2.5 발송 메소드 호출
+	
 		pushDao.sendTargetPush(push);
-		- 처리가 완료되면 결과 값으로 json 형태의 값을 받아 옵니다. (결과 코드는 매뉴얼을 확인해 주세요.)
-		ex) {“result” : “200”, “msgIdx” :  “A1DS33DDSQ2321”, “processCode” : “20003”, “message” : “메시지 등록이 완료 되었습니다.”}
+		
+- 처리가 완료되면 결과 값으로 json 형태의 값을 받아 옵니다. (결과 코드는 매뉴얼을 확인해 주세요.)
+ex) {“result” : “200”, “msgIdx” :  “A1DS33DDSQ2321”, “processCode” : “20003”, “message” : “메시지 등록이 완료 되었습니다.”}
 
 	단일건 발송에서 유의할 점은, 다수의 대상자들에게 메시지 를 발송하는 용도로 사용하여 API서버에 부하를 주는 경우 해당 계정이 차단 당할 수 있습니다.
 	이러한 다수 대상자들에게 발송하는 경우에는 3. 타켓팅 다중건 발송 기능을 이용해 주시기 바랍니다.
@@ -142,12 +148,14 @@ HttpClient 를 이용한 SSL 통신 방법은 구글링을 통해 쉽게 확인�
 		userList.add("10231349");
 		messList.add("안녕하세요. 전*현 고객님. 해당메시지는 모두에게 다르게 발송 됩니다.");
 
-		해당 셋팅은 HTML 의 Form tag를 통해 받을 수도 있고 DB나 File 등을 조회하여 처리하시게 되므로, 그에 맞게 변형하여 사용하시면 됩니다.
+
+해당 셋팅은 HTML 의 Form tag를 통해 받을 수도 있고 DB나 File 등을 조회하여 처리하시게 되므로, 그에 맞게 변형하여 사용하시면 됩니다.
 
 	2.5. 발송 메소드 호출
+	
 		pushDao.sendTargetMore(push, userList, messList);
-		- 처리가 완료되면 결과 값으로 json 형태의 값을 받아 옵니다. (결과 코드는 매뉴얼을 확인해 주세요.)
-		ex) {“result” : “200”, “msgIdx” :  “A1DS33DDSQ2321”, “processCode” : “20003”, “message” : “메시지 등록이 완료 되었습니다.”}
+- 처리가 완료되면 결과 값으로 json 형태의 값을 받아 옵니다. (결과 코드는 매뉴얼을 확인해 주세요.)
+ex) {“result” : “200”, “msgIdx” :  “A1DS33DDSQ2321”, “processCode” : “20003”, “message” : “메시지 등록이 완료 되었습니다.”}
 
 	위에서 설명한 JSP 샘플만을 보자면, 다수건 발송의 경우에도 단일건 발송과 그다지 크게 다르지 않습니다. 
 
