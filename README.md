@@ -132,6 +132,7 @@ FingerpushDaoImple.sendHttpsExe(String callUrl, List <BasicNameValuePair> params
 	2.3. 부가정보에 대한 셋팅이 필요하다면, 부가정보를 셋팅합니다. 단 타겟메시지의 경우 long text push 를 지원하지 않습니다.
 
 	2.4. 수신 받을 식별자와 해당 수신자가 받을 메시지를 셋팅 합니다. - 다수이므로, 수신받을 대상자와 메시지를 배열에 담아 둡니다.
+	
 		ArrayList<String> userList = new ArrayList();	// 푸시를 받을 대상자 목록
 		ArrayList<String> messList = new ArrayList();	// 푸시에 담을 메시지 목록
 
@@ -155,7 +156,9 @@ FingerpushDaoImple.sendHttpsExe(String callUrl, List <BasicNameValuePair> params
 	2.5. 발송 메소드 호출
 	
 		pushDao.sendTargetMore(push, userList, messList);
+		
 - 처리가 완료되면 결과 값으로 json 형태의 값을 받아 옵니다. (결과 코드는 매뉴얼을 확인해 주세요.)
+
 	ex) {“result” : “200”, “msgIdx” :  “A1DS33DDSQ2321”, “processCode” : “20003”, “message” : “메시지 등록이 완료 되었습니다.”}
 
 	위에서 설명한 JSP 샘플만을 보자면, 다수건 발송의 경우에도 단일건 발송과 그다지 크게 다르지 않습니다. 
