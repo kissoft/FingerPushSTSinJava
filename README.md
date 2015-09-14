@@ -96,7 +96,7 @@ FingerpushDaoImple.sendHttpsExe(String callUrl, List <BasicNameValuePair> params
 		pushDao.sendAllDevice(push);
 
 	- 처리가 완료되면 결과 값으로 json 형태의 값을 받아 옵니다. (결과 코드는 매뉴얼을 확인해 주세요.)
-		ex) {“result” : “200”, “message” : “정상 처리되었습니다.”,  “tokenCnt” : “15”}
+			ex) {“result” : “200”, “message” : “정상 처리되었습니다.”,  “tokenCnt” : “15”}
 
 2. 타겟팅 단일건 발송.  (참조 파일 : sendTargetOne.jsp, 참조 메소드 : FingerpushDaoImpl.sendTargetPush(PushVO push)) 타겟팅 발송이 일괄 발송과 다른점은 호출되는 API URL 과 해당 메시지를 수신할 대상 식별자 정보를 파라미터로 전송한다는 점입니다.
 
@@ -189,11 +189,9 @@ FingerpushDaoImple.sendHttpsExe(String callUrl, List <BasicNameValuePair> params
 		결과값(result)이 200 이고, 프로세스 코드(processCode) 가 20001이면 수신 대상자 및 수신 메시지를 파라미터에 담아 전달 합니다.
 	서버는 기본적으로 한번 전달에 500건까지의 식별자를 받아 주므로 이보다 많을 경우 일정 수만큼 나누어 API서버로 전달 합니다.
 
-		아래는 500건 단위로 아래 방식을 한번씩 처리할 수 있도록 한 메소드 내부 입니다.
-
-		만일 수천~수만건 단위라면 해당 대상을 500건씩 쪼개서 아래 처러 호출해 주시면 됩니다.
-
-		단 한번 발송한 내용의 결과(jsonString)를 수신하여 결과가 200이고 processCode 가 (20002)일 경우 다음 대상자 셋을 처리하는 방법으로 하셔야 합니다.
+	아래는 500건 단위로 아래 방식을 한번씩 처리할 수 있도록 한 메소드 내부 입니다.
+	만일 수천~수만건 단위라면 해당 대상을 500건씩 쪼개서 아래 처러 호출해 주시면 됩니다.
+	단 한번 발송한 내용의 결과(jsonString)를 수신하여 결과가 200이고 processCode 가 (20002)일 경우 다음 대상자 셋을 처리하는 방법으로 하셔야 합니다.
 
 		ex)		
 		// 파라미터 설정 
