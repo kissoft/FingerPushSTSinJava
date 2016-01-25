@@ -80,6 +80,17 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	@Override
 	public String sendTargetMore(PushVO push, ArrayList<String> userList, ArrayList<String> messList)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
+		return sendTargetMoreProc(push, userList, messList, null);
+	}
+	
+	@Override
+	public String sendTargetMore(PushVO push, ArrayList<String> userList, ArrayList<String> messList, ArrayList<String> fileList)
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
+			return sendTargetMoreProc(push, userList, messList, fileList);
+	}		
+	
+	private String sendTargetMoreProc(PushVO push, ArrayList<String> userList, ArrayList<String> messList, ArrayList<String> fileList) 
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
 		String tmess = "";
 		String jsonString = "";
 		String strMess = "";		
@@ -107,15 +118,22 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	    	// 대상자 목록과 대상자별로 받을 메시지의 길이가 다를 경우 발송되지 않습니다.
 	    	ArrayList departList = separateArray(userList, 500);					// 대상자 나누기
 	    	ArrayList departMessList = separateArray(messList, 500);		// 대상자별 메시지 나누기
+	    	ArrayList departFileList = null;
+	    	if(fileList != null && fileList.size() > 0)  departFileList = separateArray(fileList, 500);				// 대상자별 이미지파일 나누기
 	    	
-	    	logger.debug("action count : "+departList.size());
+	    	logger.debug("action count : "+departList.size());	    	
 	    	
 	    	for(int i=0; i<departList.size(); i++){
 	    		ArrayList<String> targetList = (ArrayList)departList.get(i);
 	    		ArrayList<String> messageList = (ArrayList)departMessList.get(i);
+	    		ArrayList<String> attachFileList = null;
+	    		if(departFileList != null && departFileList.size() > 0)  attachFileList = (ArrayList)departFileList.get(i);
 	    		
 	    		// 대상자 및 메시지를 발송 하고 결과 값을 받는다.
-	    		String tmpMessage = sendTargetList(push, targetList, messageList); 
+	    		String tmpMessage = "";
+	    		if(attachFileList != null) tmpMessage = sendTargetList(push, targetList, messageList, attachFileList);
+	    		else  tmpMessage = sendTargetList(push, targetList, messageList);
+	    		
 	    		jsonObj = JSONObject.fromObject(tmpMessage);
 	    	    logger.debug("target process : "+tmpMessage);
 	    	    
@@ -229,6 +247,28 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	private String sendTargetList(PushVO push, ArrayList<String> targetList, ArrayList<String> messList)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException
 	{
+		return	sendTargetList(push, targetList, messList, null);
+	}	
+	// 대상 리스트 발송 : 다중 건일 경우 - 개별 첨부파일 추가
+	/**
+	 * 대상 리스트 발송
+	 * @param strAppkey
+	 * @param strAppSecret
+	 * @param strCustomerKey
+	 * @param msgIdx
+	 * @param callUrl
+	 * @param targetList
+	 * @param messList
+	 * @param fileList
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 * @throws KeyManagementException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
+	private String sendTargetList(PushVO push, ArrayList<String> targetList, ArrayList<String> messList, ArrayList<String> fileList)
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException
+	{
 		String jsonString  = "";
 		
         // 파라미터 설정
@@ -247,6 +287,12 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	        // 대상자별 메시지 설정
 	        for(int i=0; i<messList.size(); i++)
 	        	params.add (new BasicNameValuePair("message", (String)messList.get(i)));      
+        }
+        
+        if(fileList != null){
+	        // 대상자별 이미지 링크 설정
+	        for(int i=0; i<fileList.size(); i++)
+	        	params.add (new BasicNameValuePair("attachfname", (String)fileList.get(i)));
         }
         
 		jsonString = sendHttpsExe(push.getCallUrl(), params);
@@ -371,4 +417,35 @@ public class FingerpushDaoImpl implements FingerpushDao{
 		
 		return jsonString;			
 	}
+
+
+	/**
+	 * 타겟 푸시 발송 후 식별자 값에 대한 유효성 및 결과 조회
+	 * (일괄 푸시는 해당 사항 없음)
+	 * 
+	 * @param push
+	 * @param pageNo
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 * @throws KeyManagementException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
+	@Override
+	public String getRtTargetMess(PushVO push, int pageNo)
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
+		String jsonString  = "";			// 서버로 발송 후 결과 메시지
+		JSONObject obj = new JSONObject();		
+		
+        List <BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(); 
+        params = setParams(push, params);																	// 푸시 메시지 기본 정보 셋팅
+        params.add (new BasicNameValuePair("msgidx", push.getMsgIdx()));				// 메시지 번호 셋팅 (필수)
+        params.add (new BasicNameValuePair("page", ""+pageNo));								// 조회할 페이지 번호
+        
+        jsonString = sendHttpsExe(push.getCallUrl(), params);
+     		
+		return jsonString;
+	}
+	
+	
 }
