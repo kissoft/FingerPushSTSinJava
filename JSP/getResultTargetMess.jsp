@@ -32,6 +32,6 @@
 		out.println(pushDao.getRtTargetMess(push, pageNo));
 	}catch(Exception e){
 		out.println(e.getMessage());
-	}
+	} 
 		
 %>
