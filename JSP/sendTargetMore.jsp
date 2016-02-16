@@ -20,11 +20,10 @@
 	FingerpushDao pushDao = new FingerpushDaoImpl();
 	
 	// 필수값 셋팅
-	//push.setCallUrl("https://www.fingerpush.com/rest/sts/v1/setSTSPushs.jsp");					// API 호출 경로
-	push.setCallUrl("https://fingerpush2.kissoft.biz:10443/rest/sts/v1/setSTSPushs.jsp");					// API 호출 경로	: 개발서버
-	push.setAppKey("RY4RJM8F9P1WPVF27JO9DW3ZQ9PWZNKS");																					// 발급받은 Appkey
-	push.setAppSecret("MFU8UzRyLYvooSKkJbHZ3thyoF2auv5P");																			// 발급받은 AppSecret
-	push.setCustomerKey("y6LMqQhqSpSS");																	// 발급 받은 customer key - Pro 이상의 서비스 사용시
+	push.setCallUrl("https://www.fingerpush.com/rest/sts/v1/setSTSPushs.jsp");					// API 호출 경로	: 개발서버
+	push.setAppKey("");																					// 발급받은 Appkey
+	push.setAppSecret("");																			// 발급받은 AppSecret
+	push.setCustomerKey("");																	// 발급 받은 customer key - Pro 이상의 서비스 사용시
 	
 	// 부가 정보 셋팅. : 해당 값들을 셋팅 안할 경우 기본값 처리.
 	/*
