@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Map;
 
 import org.apache.http.client.ClientProtocolException;
 
@@ -21,6 +22,7 @@ public interface FingerpushDao {
 	
 	/**
 	 * 타겟팅/500건 이상/각기 다른 메시지  : 	단일건 발송과 callUrl 이 다름
+	 * - 해당 API는 Deprecated 됐습니다. 추후 삭제할 예정입니다
 	 * @param push
 	 * @param userList
 	 * @param messList
@@ -35,7 +37,8 @@ public interface FingerpushDao {
 		
 	
 	/**
-	 * 타겟팅/500건 이상/각기 다른 메시지, 각기 다른 이미지파일  : 	단일건 발송과 callUrl 이 다름
+	 * 타겟팅/500건 이상/각기 다른 메시지, 각기 다른 이미지파일  : 	단일건 발송과 callUrl 이 다름 
+	 * - 해당 API는 Deprecated 됐습니다. 추후 삭제할 예정입니다
 	 * @param push
 	 * @param userList
 	 * @param messList
@@ -46,7 +49,20 @@ public interface FingerpushDao {
 	 * @throws IOException
 	 */
 	public String sendTargetMore(PushVO push, ArrayList<String> userList, ArrayList<String> messList, ArrayList<String> fileList)
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException;	
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException;
+	
+	/**
+	 * version 3.0
+	 * @param push
+	 * @param paramList
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 * @throws KeyManagementException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
+	public String sendTargetMore(PushVO push, ArrayList<Map> paramList)
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException;
 	
 	/**
 	 * 활성화된 모든 디바이스에 일괄 발송
