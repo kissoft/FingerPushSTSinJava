@@ -57,7 +57,7 @@ HttpClient 를 이용한 SSL 통신 방법은 구글링을 통해 쉽게 확인�
 	1.2 필수 기본값 셋팅	
 		해당 값들은 Fingerpush 서비스에 Pro 계정 이상으로 가입한 경우 발급된 값들을 셋팅 합니다.
 
-		push.setCallUrl("https://www.fingerpush.com/rest/sts/v1/setFingerPush.jsp");		// 일괄발송 호출 경로
+		push.setCallUrl("https://api.fingerpush.com/rest/sts/v3/setFingerPush.jsp");		// 일괄발송 호출 경로
 		push.setAppKey("RY4R______________________KS");						// 발급받은 Appkey
 		push.setAppSecret("MF______________________auv5P");					// 발급받은 AppSecret
 		push.setCustomerKey("y_________pSS");							// 발급 받은 customer key - Pro 이상의 서비스 사용시
@@ -90,10 +90,22 @@ HttpClient 를 이용한 SSL 통신 방법은 구글링을 통해 쉽게 확인�
 		push.setFnm("");						// 이미지 파일 경로 : ex) http://도메인/이미지 파일 경로
 		push.setSend_state("0002");					// 0001 : 즉시발송, 0002 : 예약발송
 		push.setSenddate("201508301330");				// yyyymmdd24Hmin, send_state 가 0002(예약발송) 인 경우에만 해당 값 셋팅
+		push.setLink("http://www.fingerpush.com");
+		
 
 	1.5 발송 메소드 호출
 
 		pushDao.sendAllDevice(push);
+		push.setTitle("v3.0 일괄 메시지");
+		push.setBgcolor("#FFFFFF");	// 배경 컬러 RGB 값 :  ex) #FF0000
+		push.setFontcolor("#4374D9");	// 폰트 컬러 RGB 값 :  ex) #4374D9
+	
+		push.setIsetiquette("Y");			// 에티켓 시간 적용 여부 Y 적용, N 적용 안함.
+		push.setEtiquette_stime("21");	// 에티켓 적용 시작 시간 0~23
+		push.setEtiquette_etime("08");	// 에티켓 적용 해제 시간 0~23
+		push.setLabel_code("hxJBeF2muh3");			// 메시지 라벨코드 : 메시지 라벨관리에서 발급받은 10자리 난수
+		push.setAnd_priority("M");			// 안드로이드 우선순위 H : 높음 / M : 중간(default)	
+		push.setOptagree("0000");		// 옵션 동의 : 0000  광고수신 비동의 여부에 관계없이 발송, 1000 광고수신동의	한사람에게만 발송
 
 		- 처리가 완료되면 결과 값으로 json 형태의 값을 받아 옵니다. (결과 코드는 매뉴얼을 확인해 주세요.)
 		ex) {“result” : “200”, “message” : “정상 처리되었습니다.”,  “tokenCnt” : “15”}
@@ -131,30 +143,35 @@ HttpClient 를 이용한 SSL 통신 방법은 구글링을 통해 쉽게 확인�
         3.1, 3.2 객체 선언 및 필수 기본값 셋팅은 일괄 발송과 처리 방식이 동일 합니다.
 
 	3.3. 부가정보에 대한 셋팅이 필요하다면, 부가정보를 셋팅합니다. 단 타겟메시지의 경우 long text push 를 지원하지 않습니다.
-
-	3.4. 수신 받을 식별자와 해당 수신자가 받을 메시지를 셋팅 합니다. - 다수이므로, 수신받을 대상자와 메시지를 배열에 담아 둡니다.
-
-		ArrayList<String> userList = new ArrayList();	// 푸시를 받을 대상자 목록
-		ArrayList<String> messList = new ArrayList();	// 푸시에 담을 메시지 목록
-
-		userList.add("10001231");
-		messList.add("안녕하세요. 배*진 고객님. 해당메시지는 모두에게 다르게 발송 됩니다.");
-		userList.add("10001232");
-		messList.add("안녕하세요. 이*정 고객님. 해당메시지는 모두에게 다르게 발송 됩니다.");
-		userList.add("10001233");
-		messList.add("안녕하세요. 김*수 고객님. 해당메시지는 모두에게 다르게 발송 됩니다.");
-		userList.add("10001234");
-		messList.add("안녕하세요. 김*랑 고객님. 해당메시지는 모두에게 다르게 발송 됩니다.");
-
-		... 중략 ...
-
-		userList.add("10231349");
-		messList.add("안녕하세요. 전*현 고객님. 해당메시지는 모두에게 다르게 발송 됩니다.");
+	
+	3.4 version 3.0 부터는 각각 개별 대상자들에게 서로 다른 메시지/이미지/개별링크/타이틀 을 별도로 줄 수 있습니다.
+	    이러한 값들은 Map 형식의 Object 를 포함한 배열에 담아 둡니다.
+	    
+	    아래 예문은 테스트를 위해 임의로 루프 처리 하였으나, 실제 개발시에는 DB나 별도의 파일 등에서 발송 대상 내용을 읽어와 처리하게 됩니다.
+	
+		// 배열에 해당 메시지를 수신받을 식별자 및 메시지 셋팅 : 
+		// 값들은 parameter 로 전달 되므로 특정 사이즈 이상의 값들이 전달 될 경우 잃어 버리는 값들이 발생 합니다. 그런 이유로 
+		// 수신 대상이 많을 경우 메소드에서 분할 하여 처리 됩니다.(자세한 내용은 해당 메소드)
+		// 테스트 용입니다. 실제 서비스에서는 DB 등에서 읽어 들이거나 입력 폼을 통해 해당 값들을 받아 처리 가능 합니다.
+		// 식별자와, 메시지의 수는 일치해야 합니다. 그렇지 않을 경우 받는사람이 다른 메시지를 받을 가능성이 있습니다.
+		ArrayList<Map> paramList = new ArrayList();
+		
+		for(int i = 0; i < 1300; i++){
+			Map paramMap = new HashMap();
+			paramMap.put("identity", "memberId_"+i); // 식별자
+			paramMap.put("message", "안녕하세요. "+i+" 번째 고객님. 해당메시지는 모두에게 다르게 발송 됩니다."); // 개별 메시지	
+			paramMap.put("imgLink", "https://www.fingerpush.com/img/admin/ico/ico_android"+i+".png"); // 개별 이미지
+			paramMap.put("link", "http://www.kissoft.co.kr/mem/"+i);	// 개별 웹 링크
+			paramMap.put("title", "title_"+i);				// 개별 타이틀
+			
+			paramList.add(paramMap);
+		} // end for			
+		
 
 		해당 셋팅은 HTML 의 Form tag를 통해 받을 수도 있고 DB나 File 등을 조회하여 처리하시게 되므로, 그에 맞게 변형하여 사용하시면 됩니다.
 
 	3.5. 발송 메소드 호출
-		pushDao.sendTargetMore(push, userList, messList);
+		pushDao.sendTargetMore(push, paramList);
 		- 처리가 완료되면 결과 값으로 json 형태의 값을 받아 옵니다. (결과 코드는 매뉴얼을 확인해 주세요.)
 		ex) {“result” : “200”, “msgIdx” :  “A1DS33DDSQ2321”, “processCode” : “20003”, “message” : “메시지 등록이 완료 되었습니다.”}
 
@@ -162,10 +179,9 @@ HttpClient 를 이용한 SSL 통신 방법은 구글링을 통해 쉽게 확인�
 
 	하지만 실제 발송할 건수가 수백, 수천, 수만건이 될 경우에는 서버 자원 문제등으로 JSP 에 배열을 담아 샘플처럼 처리하는 방식은 적절하지 않습니다.
 
-	또한, 많은 데이터를 잘게 쪼게서 API서버에 무턱대로 던질경우 과도한 트래픽을 유도하게 되어, 해당 계정이 정지 당할 수도 있습니다.
+	또한, <font color='red'>많은 데이터를 잘게 쪼게서 API서버에 무턱대로 던질경우 과도한 트래픽을 유도하게 되어, 해당 계정이 정지 당할 수도 있습니다.</font>
 
 	하여, 이러한 경우에는 샘플 소스를 확인하여 아래와 같이 처리해 주셔야 합니다.	
-
 	
 	JSP에서는 해당 기능을 하나의 메소드로 표현하였으나, 해당 메소드를 뜯어 보면, 크게 3가지 절차로 나누어 볼 수 있는데, 아래와 같습니다.
 
@@ -211,7 +227,8 @@ HttpClient 를 이용한 SSL 통신 방법은 구글링을 통해 쉽게 확인�
 			for(int i=0; i<messList.size(); i++)
 				params.add (new BasicNameValuePair("message", (String)messList.get(i)));      
 		}
-        
+                // ... 개별 이미지/링크/타이틀 이 있을 경우 동일하게 처리해 줍니다 ...
+                
 		jsonString = sendHttpsExe(push.getCallUrl(), params);
 		
 		
