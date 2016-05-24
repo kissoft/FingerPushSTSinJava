@@ -9,7 +9,7 @@
   *
   *      date         		           author              	   description
   * --------------------------------------------------------------------------------
-  * 	2015-01-18            	PandaO_OBae
+  * 	2015-05-25            	PandaO_OBae
   */
 %>    
 <%@ page import="com.fingerpush.push.PushVO" %>
@@ -20,18 +20,19 @@
 	FingerpushDao pushDao = new FingerpushDaoImpl();
 	
 	// 필수값 셋팅
-	push.setCallUrl("https://www.fingerpush.com/rest/sts/v1/setFingerPush.jsp");					// 일괄발송 호출 경로	
-	push.setAppKey("");												// 발급받은 Appkey
-	push.setAppSecret("");												// 발급받은 AppSecret
-	push.setCustomerKey("");																				// 발급 받은 customer key - Pro 이상의 서비스 사용시
+	push.setCallUrl("https://api.fingerpush.com/rest/sts/v3/getResultTgMess.jsp");					// API 호출 경로	: 개발서버
+	push.setAppKey("");																					// 발급받은 Appkey
+	push.setAppSecret("");																			// 발급받은 AppSecret
+	push.setCustomerKey("");																	// 발급 받은 customer key - Pro 이상의 서비스 사용시
 	
-	push.setMsgIdx("ASAASDasdA525000");																						//  Server to Server 발송 후 받은  message idx 값	
+	
+	push.setMsgIdx("JH9KJYB7PN525538");																						//  Server to Server 발송 후 받은  message idx 값	
 	int pageNo = 1;																																// 조회할 페이지 수
 	
 	try{		
 		out.println(pushDao.getRtTargetMess(push, pageNo));
 	}catch(Exception e){
 		out.println(e.getMessage());
-	} 
+	}
 		
 %>
