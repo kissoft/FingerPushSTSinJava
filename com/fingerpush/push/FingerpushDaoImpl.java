@@ -6,6 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -80,16 +81,68 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	@Override
 	public String sendTargetMore(PushVO push, ArrayList<String> userList, ArrayList<String> messList)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
-		return sendTargetMoreProc(push, userList, messList, null);
+		return sendTargetMoreProc(push, userList, messList, new ArrayList(), new ArrayList(), new ArrayList());
 	}
 	
 	@Override
 	public String sendTargetMore(PushVO push, ArrayList<String> userList, ArrayList<String> messList, ArrayList<String> fileList)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
-			return sendTargetMoreProc(push, userList, messList, fileList);
+			return sendTargetMoreProc(push, userList, messList, fileList, new ArrayList(), new ArrayList());
 	}		
 	
-	private String sendTargetMoreProc(PushVO push, ArrayList<String> userList, ArrayList<String> messList, ArrayList<String> fileList) 
+	/**
+	 * 개별 링크, 개별 타이틀 추가됨
+	 */
+	@Override
+	public String sendTargetMore(PushVO push, ArrayList<Map> paramList)
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
+			
+			String code = "200";
+			String message = "";
+			
+			ArrayList<String> userList = new ArrayList();
+			ArrayList<String> messList = new ArrayList();
+			ArrayList<String> fileList = new ArrayList();
+			ArrayList<String> linkList = new ArrayList();
+			ArrayList<String> titleList = new ArrayList();
+			
+			for(int i=0; i<paramList.size(); i++){
+				 Map tmpMap = paramList.get(i);
+				 userList.add((String)tmpMap.get("identity"));
+				 messList.add((String)tmpMap.get("message"));
+				 fileList.add((String)tmpMap.get("imgLink"));
+				 linkList.add((String)tmpMap.get("link"));
+				 titleList.add((String)tmpMap.get("title"));
+			}
+			
+			if(messList.size() > 0 && userList.size() != messList.size()){
+				code = "5000";
+				message = "대상자 수와 메시지 수가 일치하지 않습니다.";
+			} 
+			if(fileList.size() > 0 && userList.size() != fileList.size()){
+				code = "5000";
+				message = "대상자 수와 첨부이미지 수가 일치하지 않습니다.";
+			} 
+			if(linkList.size() > 0 && userList.size() != linkList.size()){
+				code = "5000";
+				message = "대상자 수와 웹링크 수가 일치하지 않습니다.";
+			} 		
+			if(titleList.size() > 0 && userList.size() != titleList.size()){
+				code = "5000";
+				message = "대상자 수와 타이틀 수가 일치하지 않습니다.";
+			} 					
+			
+			if(!code.equals("200")){
+				JSONObject obj = new JSONObject();
+				obj.put("code", code);
+				obj.put("message", message);
+				return obj.toString();
+			}else return sendTargetMoreProc(push, userList, messList, fileList, linkList, titleList);
+	}
+
+
+    
+	private String sendTargetMoreProc(PushVO push, ArrayList<String> userList, ArrayList<String> messList, ArrayList<String> fileList, ArrayList<String> linkList, ArrayList<String> titleList) 
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
 		String tmess = "";
 		String jsonString = "";
@@ -119,19 +172,27 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	    	ArrayList departList = separateArray(userList, 500);					// 대상자 나누기
 	    	ArrayList departMessList = separateArray(messList, 500);		// 대상자별 메시지 나누기
 	    	ArrayList departFileList = null;
-	    	if(fileList != null && fileList.size() > 0)  departFileList = separateArray(fileList, 500);				// 대상자별 이미지파일 나누기
+	    	ArrayList departLinkList = null;
+	    	ArrayList departTitleList = null;
+	    	if(fileList != null && fileList.size() > 0)  departFileList = separateArray(fileList, 500);					// 대상자별 이미지파일 나누기
+	    	if(linkList != null && linkList.size() > 0)  departLinkList = separateArray(linkList, 500);				// 대상자별 웹링크 나누기
+	    	if(titleList != null && titleList.size() > 0)  departTitleList = separateArray(titleList, 500);				// 대상자별 타이틀 나누기
 	    	
-	    	logger.debug("action count : "+departList.size());	    	
+	    	//logger.debug("action count : "+departList.size());   	
 	    	
 	    	for(int i=0; i<departList.size(); i++){
 	    		ArrayList<String> targetList = (ArrayList)departList.get(i);
 	    		ArrayList<String> messageList = (ArrayList)departMessList.get(i);
 	    		ArrayList<String> attachFileList = null;
+	    		ArrayList<String> prv_linkList = null;
+	    		ArrayList<String> prv_titleList = null;
 	    		if(departFileList != null && departFileList.size() > 0)  attachFileList = (ArrayList)departFileList.get(i);
+	    		if(departLinkList != null && departLinkList.size() > 0)  prv_linkList = (ArrayList)departLinkList.get(i);
+	    		if(departTitleList != null && departTitleList.size() > 0)  prv_titleList = (ArrayList)departTitleList.get(i);
 	    		
 	    		// 대상자 및 메시지를 발송 하고 결과 값을 받는다.
 	    		String tmpMessage = "";
-	    		if(attachFileList != null) tmpMessage = sendTargetList(push, targetList, messageList, attachFileList);
+	    		if(attachFileList != null) tmpMessage = sendTargetList(push, targetList, messageList, attachFileList, prv_linkList, prv_titleList);
 	    		else  tmpMessage = sendTargetList(push, targetList, messageList);
 	    		
 	    		jsonObj = JSONObject.fromObject(tmpMessage);
@@ -209,7 +270,19 @@ public class FingerpushDaoImpl implements FingerpushDao{
         params.add (new BasicNameValuePair("send_state", push.getSend_state()));// 발송 상태 : 0001 즉시발송, 0002 예약발송
         if(push.getSend_state().equals("0002"))   params.add (new BasicNameValuePair("senddate", push.getSenddate()));	  // 발송 시간(예약발송일 경우) yyyymmdd24Hmin
 		
-		
+    	// V3.0 추가 내용
+        params.add (new BasicNameValuePair("title", push.getTitle()));					// 제목
+        params.add (new BasicNameValuePair("bgcolor", push.getBgcolor()));		// 배경 컬러 RGB 값 :  ex) #FF0000
+        params.add (new BasicNameValuePair("fcolor", push.getFontcolor()));		// 폰트 컬러 RGB 값 :  ex) #4374D9
+        params.add (new BasicNameValuePair("lcode", push.getLabel_code()));	// 메시지 라벨코드 : 메시지 라벨관리에서 발급받은 10자리 난수
+        params.add (new BasicNameValuePair("sspeed", push.getSendspeed()));	// 발송 속도 처리
+        params.add (new BasicNameValuePair("ofb_time", push.getOfb_time()));	// opened fall back time : 오픈 처리 제한시간  - 2h, 4h, 1d, 3d, 5d, 1w
+        params.add (new BasicNameValuePair("isetiquette", push.getIsetiquette()));	// 에티켓 시간 적용 여부 Y 적용, N 적용 안함.
+        params.add (new BasicNameValuePair("etiquette_stime", push.getEtiquette_stime()));		// 에티켓 적용 시작 시간 0~23
+        params.add (new BasicNameValuePair("etiquette_etime", push.getEtiquette_etime()));		// 에티켓 적용 해제 시간 0~23
+        params.add (new BasicNameValuePair("and_priority", push.getAnd_priority()));	// 안드로이드 우선순위 H : 높음 / M : 중간(default)
+        params.add (new BasicNameValuePair("optagree", push.getOptagree()));			// 옵션 동의 : 0000  광고수신 비동의 여부에 관계없이 발송, 1000 광고수신동의	한사람에게만 발송
+        		
 		return params;
 	}
 	
@@ -247,7 +320,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	private String sendTargetList(PushVO push, ArrayList<String> targetList, ArrayList<String> messList)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException
 	{
-		return	sendTargetList(push, targetList, messList, null);
+		return	sendTargetList(push, targetList, messList, null, null, null);
 	}	
 	// 대상 리스트 발송 : 다중 건일 경우 - 개별 첨부파일 추가
 	/**
@@ -266,7 +339,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 */
-	private String sendTargetList(PushVO push, ArrayList<String> targetList, ArrayList<String> messList, ArrayList<String> fileList)
+	private String sendTargetList(PushVO push, ArrayList<String> targetList, ArrayList<String> messList, ArrayList<String> fileList, ArrayList<String> linkList, ArrayList<String> titleList)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException
 	{
 		String jsonString  = "";
@@ -287,13 +360,22 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	        // 대상자별 메시지 설정
 	        for(int i=0; i<messList.size(); i++)
 	        	params.add (new BasicNameValuePair("message", (String)messList.get(i)));      
-        }
-        
+        }        
         if(fileList != null){
 	        // 대상자별 이미지 링크 설정
 	        for(int i=0; i<fileList.size(); i++)
-	        	params.add (new BasicNameValuePair("attachfname", (String)fileList.get(i)));
+	        	params.add (new BasicNameValuePair("prv_attachfname", (String)fileList.get(i)));
+        }        
+        if(linkList != null){
+	        // 대상자별 웹 링크 설정
+	        for(int i=0; i<linkList.size(); i++)
+	        	params.add (new BasicNameValuePair("prv_linkurl", (String)linkList.get(i)));
         }
+        if(titleList != null){
+	        // 대상자별 타이틀 설정
+	        for(int i=0; i<linkList.size(); i++)
+	        	params.add (new BasicNameValuePair("prv_title", (String)titleList.get(i)));
+        }               
         
 		jsonString = sendHttpsExe(push.getCallUrl(), params);
 		        
