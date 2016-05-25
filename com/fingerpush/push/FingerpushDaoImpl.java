@@ -461,7 +461,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
             SSLContext sslcontext = SSLContext.getInstance("TLS");//SSLContext 지정된 시큐어 소켓 프로토콜 구현
             sslcontext.init(null, new TrustManager[] { easyTrustManager }, null);
 
-            SSLSocketFactory socketFactory = new SSLSocketFactory(sslcontext,SSLSocketFactory.STRICT_HOSTNAME_VERIFIER);
+            SSLSocketFactory socketFactory = new SSLSocketFactory(sslcontext,SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
             
             Scheme sch = new Scheme("https", 443, socketFactory);//SSL기본포트 : 443
             httpclient.getConnectionManager().getSchemeRegistry().register(sch);
