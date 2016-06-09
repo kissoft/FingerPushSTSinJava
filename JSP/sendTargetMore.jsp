@@ -57,7 +57,7 @@
 	push.setAnd_priority("H");			// 안드로이드 우선순위 H : 높음 / M : 중간(default)
 	push.setOptagree("0000");		// 옵션 동의 : 0000  광고수신 비동의 여부에 관계없이 발송, 1000 광고수신동의	한사람에게만 발송
 	
-	ArrayList<Map> paramList = new ArrayList();
+	ArrayList<Map<String, String>> paramList = new ArrayList<Map<String, String>>();
 
 	// 배열에 해당 메시지를 수신받을 식별자 및 메시지 셋팅 : 
 	// 값들은 parameter 로 전달 되므로 특정 사이즈 이상의 값들이 전달 될 경우 잃어 버리는 값들이 발생 합니다. 그런 이유로 
@@ -65,7 +65,7 @@
 	// 테스트 용입니다. 실제 서비스에서는 DB 등에서 읽어 들이거나 입력 폼을 통해 해당 값들을 받아 처리 가능 합니다.
 	// 식별자와, 메시지의 수는 일치해야 합니다. 그렇지 않을 경우 받는사람이 다른 메시지를 받을 가능성이 있습니다.
 	for(int i = 0; i < 1300; i++){
-		Map paramMap = new HashMap();
+		Map<String, String> paramMap = new HashMap<String, String>();
 		paramMap.put("identity", "memberId_"+i);
 		paramMap.put("message", "안녕하세요. "+i+" 번째 고객님. 해당메시지는 모두에게 다르게 발송 됩니다.");		
 		paramMap.put("imgLink", "https://www.fingerpush.com/img/admin/ico/ico_android"+i+".png");		
