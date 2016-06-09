@@ -27,7 +27,16 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 
-import net.sf.json.JSONObject;
+import java.net.MalformedURLException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.URL;
+import javax.net.ssl.HostnameVerifier;
+import java.net.HttpURLConnection;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSession;
+
 
 public class FingerpushDaoImpl implements FingerpushDao{
 	Logger logger;
@@ -43,7 +52,6 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	public String sendAllDevice(PushVO push)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
 		String jsonString  = "";			// 서버로 발송 후 결과 메시지
-		JSONObject obj = new JSONObject();		
 		
         List <BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(); 
         params = setParams(push, params);															// 푸시 메시지 기본 정보 셋팅
@@ -53,8 +61,8 @@ public class FingerpushDaoImpl implements FingerpushDao{
         params.add(new BasicNameValuePair("tag", push.getTag()));					// 태그 검색시 태그 : ' , ' 로 구분
         params.add(new BasicNameValuePair("beschmode", push.getBeschmode()));	// 태그 검색시 태그 : ' , ' 로 구분
         
-        jsonString = sendHttpsExe(push.getCallUrl(), params);
-     		
+        //jsonString = sendHttpsExe(push.getCallUrl(), params);			// DefaultHttpClient  deprecated
+        jsonString = sendHttpsUrlConExe(push.getCallUrl(), params); 
 		return jsonString;
 	}
 
@@ -81,33 +89,33 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	@Override
 	public String sendTargetMore(PushVO push, ArrayList<String> userList, ArrayList<String> messList)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
-		return sendTargetMoreProc(push, userList, messList, new ArrayList(), new ArrayList(), new ArrayList());
+		return sendTargetMoreProc(push, userList, messList, new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>());
 	}
 	
 	@Override
 	public String sendTargetMore(PushVO push, ArrayList<String> userList, ArrayList<String> messList, ArrayList<String> fileList)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
-			return sendTargetMoreProc(push, userList, messList, fileList, new ArrayList(), new ArrayList());
+			return sendTargetMoreProc(push, userList, messList, fileList, new ArrayList<String>(), new ArrayList<String>());
 	}		
 	
 	/**
 	 * 개별 링크, 개별 타이틀 추가됨
 	 */
 	@Override
-	public String sendTargetMore(PushVO push, ArrayList<Map> paramList)
+	public String sendTargetMore(PushVO push, ArrayList<Map<String, String>> paramList)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
 			
 			String code = "200";
 			String message = "";
 			
-			ArrayList<String> userList = new ArrayList();
-			ArrayList<String> messList = new ArrayList();
-			ArrayList<String> fileList = new ArrayList();
-			ArrayList<String> linkList = new ArrayList();
-			ArrayList<String> titleList = new ArrayList();
+			ArrayList<String> userList = new ArrayList<String>();
+			ArrayList<String> messList = new ArrayList<String>();
+			ArrayList<String> fileList = new ArrayList<String>();
+			ArrayList<String> linkList = new ArrayList<String>();
+			ArrayList<String> titleList = new ArrayList<String>();
 			
 			for(int i=0; i<paramList.size(); i++){
-				 Map tmpMap = paramList.get(i);
+				 Map<String, String> tmpMap = paramList.get(i);
 				 userList.add((String)tmpMap.get("identity"));
 				 messList.add((String)tmpMap.get("message"));
 				 fileList.add((String)tmpMap.get("imgLink"));
@@ -144,9 +152,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
     
 	private String sendTargetMoreProc(PushVO push, ArrayList<String> userList, ArrayList<String> messList, ArrayList<String> fileList, ArrayList<String> linkList, ArrayList<String> titleList) 
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
-		String tmess = "";
 		String jsonString = "";
-		String strMess = "";		
         // 파라미터 설정
         List <BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(); 
         params = setParams(push, params);		        // 푸시 메시지 기본 정보 셋팅
@@ -169,11 +175,11 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	    // >>>>>>>>>>>>>>>>>> step 2. 대상자 발송 : 500 건씩 나누어 발송 한다 (500건-한번에 등록 가능한 식별자 수 --> 중요)
 	    if(result.equals("200") && processCode.equals("20001")){
 	    	// 대상자 목록과 대상자별로 받을 메시지의 길이가 다를 경우 발송되지 않습니다.
-	    	ArrayList departList = separateArray(userList, 500);					// 대상자 나누기
-	    	ArrayList departMessList = separateArray(messList, 500);		// 대상자별 메시지 나누기
-	    	ArrayList departFileList = null;
-	    	ArrayList departLinkList = null;
-	    	ArrayList departTitleList = null;
+	    	List<ArrayList<String>> departList = separateArray(userList, 500);					// 대상자 나누기
+	    	List<ArrayList<String>> departMessList = separateArray(messList, 500);		// 대상자별 메시지 나누기
+	    	List<ArrayList<String>> departFileList = null;
+	    	List<ArrayList<String>> departLinkList = null;
+	    	List<ArrayList<String>> departTitleList = null;
 	    	if(fileList != null && fileList.size() > 0)  departFileList = separateArray(fileList, 500);					// 대상자별 이미지파일 나누기
 	    	if(linkList != null && linkList.size() > 0)  departLinkList = separateArray(linkList, 500);				// 대상자별 웹링크 나누기
 	    	if(titleList != null && titleList.size() > 0)  departTitleList = separateArray(titleList, 500);				// 대상자별 타이틀 나누기
@@ -181,14 +187,14 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	    	//logger.debug("action count : "+departList.size());   	
 	    	
 	    	for(int i=0; i<departList.size(); i++){
-	    		ArrayList<String> targetList = (ArrayList)departList.get(i);
-	    		ArrayList<String> messageList = (ArrayList)departMessList.get(i);
+	    		ArrayList<String> targetList = (ArrayList<String>)departList.get(i);
+	    		ArrayList<String> messageList = (ArrayList<String>)departMessList.get(i);
 	    		ArrayList<String> attachFileList = null;
 	    		ArrayList<String> prv_linkList = null;
 	    		ArrayList<String> prv_titleList = null;
-	    		if(departFileList != null && departFileList.size() > 0)  attachFileList = (ArrayList)departFileList.get(i);
-	    		if(departLinkList != null && departLinkList.size() > 0)  prv_linkList = (ArrayList)departLinkList.get(i);
-	    		if(departTitleList != null && departTitleList.size() > 0)  prv_titleList = (ArrayList)departTitleList.get(i);
+	    		if(departFileList != null && departFileList.size() > 0)  attachFileList = departFileList.get(i);
+	    		if(departLinkList != null && departLinkList.size() > 0)  prv_linkList = departLinkList.get(i);
+	    		if(departTitleList != null && departTitleList.size() > 0)  prv_titleList = departTitleList.get(i);
 	    		
 	    		// 대상자 및 메시지를 발송 하고 결과 값을 받는다.
 	    		String tmpMessage = "";
@@ -237,8 +243,9 @@ public class FingerpushDaoImpl implements FingerpushDao{
         params.add (new BasicNameValuePair("msgidx",push.getMsgIdx()));					 		// 발급받은 message id 를 넣어 준다.  (필수)
         params.add (new BasicNameValuePair("isfinish", "Y"));									// 발송 완료 처리
         
-        jsonString = sendHttpsExe(push.getCallUrl(), params);
-		          
+        //jsonString = sendHttpsExe(push.getCallUrl(), params);					// DefaultHttpClient  deprecated
+        jsonString = sendHttpsUrlConExe(push.getCallUrl(), params);	
+                  
 		return jsonString;			
 	}		
 	
@@ -298,7 +305,9 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	 */
 	private String sendMessage(String callUrl, List <BasicNameValuePair> params) 
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException{
-		return sendHttpsExe(callUrl, params);
+		//return sendHttpsExe(callUrl, params);				// DefaultHttpClient  deprecated
+		return sendHttpsUrlConExe(callUrl, params);		
+		
 	}
 	
 	// 대상 리스트 발송 : 다중 건일 경우
@@ -377,8 +386,8 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	        	params.add (new BasicNameValuePair("prv_title", (String)titleList.get(i)));
         }               
         
-		jsonString = sendHttpsExe(push.getCallUrl(), params);
-		        
+		//jsonString = sendHttpsExe(push.getCallUrl(), params);				// DefaultHttpClient  deprecated
+		jsonString = sendHttpsUrlConExe(push.getCallUrl(), params);		        
 		return jsonString;			
 	}	
 
@@ -389,8 +398,9 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	 * @param size
 	 * @return
 	 */
-	private ArrayList<ArrayList> separateArray(ArrayList<String> array, int size){
-		ArrayList<ArrayList> returnArray = new ArrayList();
+	private List<ArrayList<String>> separateArray(ArrayList<String> array, int size){
+		//ArrayList<ArrayList> returnArray = new ArrayList();
+		List<ArrayList<String>> returnArray = new ArrayList<ArrayList<String>>();
 		boolean init = false;
 		ArrayList<String> tmpList = new ArrayList<String>();
 				
@@ -443,7 +453,8 @@ public class FingerpushDaoImpl implements FingerpushDao{
 		httpclient.getParams().setParameter("http.connection-manager.timeout", new Long(120 * 1000));
 		httpclient.getParams().setParameter("http.protocol.head-body-timeout", 120 * 1000);
 		
-		// override
+		
+		// override		
         TrustManager easyTrustManager = new X509TrustManager() {            
             @Override
             public java.security.cert.X509Certificate[] getAcceptedIssuers() {  return null;     }
@@ -453,7 +464,8 @@ public class FingerpushDaoImpl implements FingerpushDao{
             
             @Override
             public void checkClientTrusted(java.security.cert.X509Certificate[] chain,String authType) throws CertificateException {}
-        };		
+        };        
+        
         
         // HttpClient의 경우 X509TrustManager를 이용해 SSLContext를 생성하고
         // ClientConnectionManager와 SchemeRegistry에 SSLSocketFactory를 등록해 준다.        
@@ -461,6 +473,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
             SSLContext sslcontext = SSLContext.getInstance("TLS");//SSLContext 지정된 시큐어 소켓 프로토콜 구현
             sslcontext.init(null, new TrustManager[] { easyTrustManager }, null);
 
+            //SSLSocketFactory socketFactory = new SSLSocketFactory(sslcontext,SSLSocketFactory.STRICT_HOSTNAME_VERIFIER);
             SSLSocketFactory socketFactory = new SSLSocketFactory(sslcontext,SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
             
             Scheme sch = new Scheme("https", 443, socketFactory);//SSL기본포트 : 443
@@ -491,7 +504,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
             // 받은 결과를 String 유형으로 변환     
             jsonString = EntityUtils.toString(resEntity);
             
-        } finally {
+        }finally {
            //Apache의 HttpClient 라이버러리에서는 웹 서버를 연결을 하고 난후 명시적으로 끊는 부분이 없을 경우 대기 상태로 넘어가며,
         	//이런 대기가 여러개 발생하게 되면 웹서버의 네트워크 리소스에 누수가 발생할 수가 있다. 
         	httpclient.getConnectionManager().shutdown();//<-httpclient의 접속 끊기. 
@@ -499,7 +512,105 @@ public class FingerpushDaoImpl implements FingerpushDao{
 		
 		return jsonString;			
 	}
+	
+	/**
+	 * HttpsURLConnect 사용 하여 HTTPS 처리함.
+	 * 2016-06-08
+	 * @param callUrl
+	 * @param params
+	 * @return
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException
+	 * @throws KeyManagementException
+	 */
+	public String sendHttpsUrlConExe(String callUrl, List <BasicNameValuePair> params)
+			throws IOException, NoSuchAlgorithmException, KeyManagementException, MalformedURLException
+	{
+		String jsonString = "";
 
+	
+        URL url = new URL(callUrl);
+        trustAllHosts();
+
+        HttpsURLConnection httpsURLConnection = (HttpsURLConnection) url.openConnection();
+        httpsURLConnection.setHostnameVerifier(new HostnameVerifier() {
+            @Override
+            public boolean verify(String s, SSLSession sslSession) {
+                return true;
+            }
+        });
+
+        HttpURLConnection connection = httpsURLConnection;
+
+        connection.setRequestMethod("POST");
+		connection.setUseCaches(false);           
+        connection.setDoInput(true);
+        connection.setDoOutput(true);
+
+		 UrlEncodedFormEntity entity = new UrlEncodedFormEntity(params, "utf-8");
+		 OutputStream post = connection.getOutputStream();
+		 entity.writeTo(post);
+		 
+		 post.flush();
+         connection.connect();
+
+         // 결과 조회
+         StringBuilder responseStringBuilder = new StringBuilder();
+         logger.debug("contentType : "+connection.getContentType());
+         if (connection.getResponseCode() == HttpURLConnection.HTTP_OK){
+        	
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+            for (;;){
+                String stringLine = bufferedReader.readLine();
+                if (stringLine == null ) break;
+                responseStringBuilder.append(stringLine + '\n');
+            }
+            bufferedReader.close();
+         }
+
+         connection.disconnect();
+
+         jsonString = responseStringBuilder.toString();             
+        
+		return jsonString;
+	}
+	
+    private static void trustAllHosts() {
+        // Create a trust manager that does not validate certificate chains
+        TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                return new java.security.cert.X509Certificate[]{};
+            }
+
+            @Override
+            public void checkClientTrusted(
+                    java.security.cert.X509Certificate[] chain,
+                    String authType)
+                    throws java.security.cert.CertificateException {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void checkServerTrusted(
+                    java.security.cert.X509Certificate[] chain,
+                    String authType)
+                    throws java.security.cert.CertificateException {
+                // TODO Auto-generated method stub
+
+            }
+        }};
+
+        // Install the all-trusting trust manager
+        try {
+            SSLContext sc = SSLContext.getInstance("TLS");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection
+                    .setDefaultSSLSocketFactory(sc.getSocketFactory());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 	/**
 	 * 타겟 푸시 발송 후 식별자 값에 대한 유효성 및 결과 조회
@@ -517,17 +628,15 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	public String getRtTargetMess(PushVO push, int pageNo)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
 		String jsonString  = "";			// 서버로 발송 후 결과 메시지
-		JSONObject obj = new JSONObject();		
 		
         List <BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(); 
         params = setParams(push, params);																	// 푸시 메시지 기본 정보 셋팅
         params.add (new BasicNameValuePair("msgidx", push.getMsgIdx()));				// 메시지 번호 셋팅 (필수)
         params.add (new BasicNameValuePair("page", ""+pageNo));								// 조회할 페이지 번호
         
-        jsonString = sendHttpsExe(push.getCallUrl(), params);
-     		
+        //jsonString = sendHttpsExe(push.getCallUrl(), params);
+        jsonString = sendHttpsUrlConExe(push.getCallUrl(), params); // 2016-06-08
 		return jsonString;
 	}
-	
-	
+		
 }
