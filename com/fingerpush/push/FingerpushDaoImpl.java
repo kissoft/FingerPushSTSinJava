@@ -13,7 +13,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import net.sf.json.JSONObject;
-
+import net.sf.json.JSONException; 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -50,7 +50,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	
 	@Override
 	public String sendAllDevice(PushVO push)
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException, JSONException {
 		String jsonString  = "";			// 서버로 발송 후 결과 메시지
 		
         List <BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(); 
@@ -70,7 +70,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 
 	@Override
 	public String sendTargetPush(PushVO push) 
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException, JSONException {
 		String jsonString  = "";
 		
         // 파라미터 설정
@@ -88,13 +88,13 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	
 	@Override
 	public String sendTargetMore(PushVO push, ArrayList<String> userList, ArrayList<String> messList)
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException, JSONException {
 		return sendTargetMoreProc(push, userList, messList, new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>());
 	}
 	
 	@Override
 	public String sendTargetMore(PushVO push, ArrayList<String> userList, ArrayList<String> messList, ArrayList<String> fileList)
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException, JSONException {
 			return sendTargetMoreProc(push, userList, messList, fileList, new ArrayList<String>(), new ArrayList<String>());
 	}		
 	
@@ -103,7 +103,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	 */
 	@Override
 	public String sendTargetMore(PushVO push, ArrayList<Map<String, String>> paramList)
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException, JSONException {
 			
 			String code = "200";
 			String message = "";
@@ -151,7 +151,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 
     
 	private String sendTargetMoreProc(PushVO push, ArrayList<String> userList, ArrayList<String> messList, ArrayList<String> fileList, ArrayList<String> linkList, ArrayList<String> titleList) 
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException, JSONException {
 		String jsonString = "";
         // 파라미터 설정
         List <BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(); 
@@ -230,7 +230,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	
 	// 발송 완료 처리
 	public String sendFinish(PushVO push)
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException, JSONException
 	{
 		String jsonString  = "";
 
@@ -327,7 +327,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	 * @throws IOException
 	 */
 	private String sendTargetList(PushVO push, ArrayList<String> targetList, ArrayList<String> messList)
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException, JSONException
 	{
 		return	sendTargetList(push, targetList, messList, null, null, null);
 	}	
@@ -349,7 +349,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	 * @throws IOException
 	 */
 	private String sendTargetList(PushVO push, ArrayList<String> targetList, ArrayList<String> messList, ArrayList<String> fileList, ArrayList<String> linkList, ArrayList<String> titleList)
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException, JSONException
 	{
 		String jsonString  = "";
 		
@@ -441,7 +441,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	 * @throws IOException
 	 */
 	public String sendHttpsExe(String callUrl, List <BasicNameValuePair> params)
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException, JSONException
 	{
 		String jsonString = "";
 		HttpClient httpclient = new DefaultHttpClient();
@@ -626,7 +626,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	 */
 	@Override
 	public String getRtTargetMess(PushVO push, int pageNo)
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException, JSONException {
 		String jsonString  = "";			// 서버로 발송 후 결과 메시지
 		
         List <BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(); 
