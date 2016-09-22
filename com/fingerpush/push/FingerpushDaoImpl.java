@@ -276,7 +276,8 @@ public class FingerpushDaoImpl implements FingerpushDao{
         params.add (new BasicNameValuePair("fnm", push.getFnm()));					// 첨부이미지 파일 링크 경로  (선택)
         params.add (new BasicNameValuePair("send_state", push.getSend_state()));// 발송 상태 : 0001 즉시발송, 0002 예약발송
         if(push.getSend_state().equals("0002"))   params.add (new BasicNameValuePair("senddate", push.getSenddate()));	  // 발송 시간(예약발송일 경우) yyyymmdd24Hmin
-		
+	params.add (new BasicNameValuePair("link", push.getLink()));					// 웹 링크 경로
+	
     	// V3.0 추가 내용
         params.add (new BasicNameValuePair("title", push.getTitle()));					// 제목
         params.add (new BasicNameValuePair("bgcolor", push.getBgcolor()));		// 배경 컬러 RGB 값 :  ex) #FF0000
