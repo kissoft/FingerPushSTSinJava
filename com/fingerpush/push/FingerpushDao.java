@@ -61,7 +61,7 @@ public interface FingerpushDao {
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 */
-	public String sendTargetMore(PushVO push, ArrayList<Map> paramList)
+	public String sendTargetMore(PushVO push, ArrayList<Map<String, String>> paramList)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException;
 	
 	/**
