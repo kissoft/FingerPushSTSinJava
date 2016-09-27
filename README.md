@@ -7,17 +7,25 @@ Server to Server API 이용법에 대해 잘 모르시는 분들이 많아, 간�
 
 물론, 사용자 화면의 형태에 따라 해당 json을 parsing 하여 예쁘게 보여주면 되겠죠.
 
+해당 github의 샘플소스를 보기전 핑거푸시 사이트(https://www.fingerpush.com)에서 server to server 매뉴얼을 다운받아 관련 파라미터 및 에러 코드 등에 대해 먼저 확인 하신 후 샘플 소스를 확인하시길 부탁 드립니다.
+
+여기에 올라와 있는 소스들은 해당 매뉴얼에 포함한 소스를 기반으로 메소드들을 구성하였습니다 (com.fingerpush.push.FingerpushDaoImpl)
+
 Fingerpush Server to Server API 로는 크게 다음과 같은 처리를 할 수 있습니다.
 
 1. 일괄 발송
     - 해당 앱을 설치한 모든 디바이스에 일괄 발송
     - 태그 발송 (그룹핑 발송)
     - 예약 발송 (발송시간을 미리 설정 할 수 있는)
-2. 타겟팅 단일건 발송
-    - 단일 디바이스에 특정 메시지 발송
-3. 타겟팅 다중건 발송
-    - 다수의 디바이스에 각기 메시지 발송
-4. 발송후 식별자 유효성 조회
+    
+2. 타겟팅 단일건 발송 (특정 대상자에게 단일 메시지 발송)
+
+3. 타겟팅 다중건 발송 (다수의 대상자에게 개별 메시지 발송)
+
+4. 발송후 식별자 유효성 조회(타겟 발송 후 발송에 실패한 식별자 들에 대한 결과 조회)
+
+5. 예약등록한 메시지 취소
+
 
 물론 타겟팅 발송에서도 메시지 예약 발송 등이 가능합니다.
 
@@ -33,7 +41,7 @@ Fingerpush Server to Server API 로는 크게 다음과 같은 처리를 할 수
 
 HttpClient 를 이용한 SSL 통신 방법은 구글링을 통해 쉽게 확인할 수 있으니, 넘어가기로 합니다.
 
-단, 해당 방식이 적용된 SSL 통신 처리 메소드는 샘플 소스의 FingerpushDaoImple.sendHttpsExe(String callUrl, List <BasicNameValuePair> params)
+단, 해당 방식이 적용된 SSL 통신 처리 메소드는 샘플 소스의 FingerpushDaoImpl.sendHttpsExe(String callUrl, List <BasicNameValuePair> params)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException  에 구현되어 있으며
 
 해당 방식은 X509TrustManager를 이용해 SSLContext를 생성하고, ClientConnectionManager와 SchemeRegistry에 SSLSocketFactory를 등록하여 처리하는 방식입니다.
@@ -340,3 +348,31 @@ HttpClient 를 이용한 SSL 통신 방법은 구글링을 통해 쉽게 확인�
 </tr>
 </table>
 	                     [ 식별자 조회 결과 코드 ]
+
+
+5. 예약 등록한 메시지 취소
+   예약 발송한 푸시 메시지의 경우 해당 메시지가 발송전에는 해당 취소 프로세스를 통해 발송을 취소할 수 있습니다.
+   
+	5.1 객체 선언
+
+		PushVO push = new PushVO();
+		FingerpushDao pushDao = new FingerpushDaoImpl();
+
+	5.2 필수 기본값 셋팅 1.
+		해당 값들은 Fingerpush 서비스에 Pro 계정 이상으로 가입한 경우 발급된 값들을 셋팅 합니다.
+
+		push.setCallUrl("https://api.fingerpush.com/rest/sts/v3/cnclPush.jsp");		// 예약 취소 호출 경로
+		push.setAppKey("RY4R______________________KS");					// 발급받은 Appkey
+		push.setAppSecret("MF______________________auv5P");				// 발급받은 AppSecret
+		push.setCustomerKey("y_________pSS");						// 발급 받은 customer key - Pro   
+		
+	5.3 필수 기본값 셋팅 2.
+	       메시지 관련 기본값을 셋팅 합니다.
+	       push.setMode("DEFT");							// DEFT : 일괄 푸시, STOS : 타겟팅 푸시
+	       push.setMsgIdx("5XP2DDK5NN1000491");					//  Server to Server 발송 후 받은  message idx 값
+	       
+	5.4 발송 메소드 호출
+	       pushDao.cnclPushMess(push);
+	       
+  결과 메시지는 server to server 매뉴얼을 참조해 주시기 바랍니다.
+  
