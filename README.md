@@ -41,8 +41,12 @@ Fingerpush Server to Server API 로는 크게 다음과 같은 처리를 할 수
 
 HttpClient 를 이용한 SSL 통신 방법은 구글링을 통해 쉽게 확인할 수 있으니, 넘어가기로 합니다.
 
-단, 해당 방식이 적용된 SSL 통신 처리 메소드는 샘플 소스의 FingerpushDaoImpl.sendHttpsExe(String callUrl, List <BasicNameValuePair> params)
-			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException  에 구현되어 있으며
+단, 해당 방식이 적용된 SSL 통신 처리 메소드는 샘플 소스의 
+
+FingerpushDaoImpl.sendHttpsExe(String callUrl, List <BasicNameValuePair> params)
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException  
+			
+에 구현되어 있으며
 
 해당 방식은 X509TrustManager를 이용해 SSLContext를 생성하고, ClientConnectionManager와 SchemeRegistry에 SSLSocketFactory를 등록하여 처리하는 방식입니다.
 
