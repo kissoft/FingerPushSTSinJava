@@ -21,6 +21,20 @@ public interface FingerpushDao {
 	public String sendTargetPush(PushVO push) throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException ;
 	
 	/**
+	 * 타겟팅/500건 이하
+	 * 20160922
+	 * @param push
+	 * @param paramList
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 * @throws KeyManagementException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
+	public String sendTargetUnderMax(PushVO push, ArrayList<Map<String, String>> paramList)
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException;
+	
+	/**
 	 * 타겟팅/500건 이상/각기 다른 메시지  : 	단일건 발송과 callUrl 이 다름
 	 * - 해당 API는 Deprecated 됐습니다. 추후 삭제할 예정입니다
 	 * @param push
@@ -89,5 +103,17 @@ public interface FingerpushDao {
 	 * @throws IOException
 	 */
 	public String getRtTargetMess(PushVO push, int pageNo)
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException;
+	
+	/**
+	 * 푸시 발송 예약 후 해당 푸시 메시지 취소. 푸시 메시지가 '대기' 혹은 '일시정지'일 경우에만 취소가 가능 함.
+	 * @param push
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 * @throws KeyManagementException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
+	public String cnclPushMess(PushVO push)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException;
 }
