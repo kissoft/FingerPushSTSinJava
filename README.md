@@ -367,11 +367,13 @@ HttpClient 를 이용한 SSL 통신 방법은 구글링을 통해 쉽게 확인�
 		push.setCustomerKey("y_________pSS");						// 발급 받은 customer key - Pro   
 		
 	5.3 필수 기본값 셋팅 2.
+	
 	       메시지 관련 기본값을 셋팅 합니다.
 	       push.setMode("DEFT");							// DEFT : 일괄 푸시, STOS : 타겟팅 푸시
 	       push.setMsgIdx("5XP2DDK5NN1000491");					//  Server to Server 발송 후 받은  message idx 값
 	       
 	5.4 발송 메소드 호출
+	
 	       pushDao.cnclPushMess(push);
 	       
   결과 메시지는 server to server 매뉴얼을 참조해 주시기 바랍니다.
