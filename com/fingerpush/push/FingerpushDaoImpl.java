@@ -87,9 +87,105 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	
 	
 	@Override
+	public String sendTargetUnderMax(PushVO push, ArrayList<Map<String, String>> paramList)
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
+			
+		String code = "200";
+		String message = "";
+		String result = "";
+		String msgIdx = "";
+		String processCode = "";
+		String jsonString = "";
+		
+		ArrayList<String> userList = new ArrayList<String>();
+		ArrayList<String> messList = new ArrayList<String>();
+		ArrayList<String> fileList = new ArrayList<String>();
+		ArrayList<String> linkList = new ArrayList<String>();
+		ArrayList<String> titleList = new ArrayList<String>();
+		
+		for(int i=0; i<paramList.size(); i++){
+			 Map<String, String> tmpMap = paramList.get(i);
+			 userList.add((String)tmpMap.get("identity"));
+			 messList.add((String)tmpMap.get("message"));
+			 fileList.add((String)tmpMap.get("imgLink"));
+			 linkList.add((String)tmpMap.get("link"));
+			 titleList.add((String)tmpMap.get("title"));
+		}
+		if(userList.size() > 500){
+			code = "5000";
+			message = "해당 메소드는 대상자가 500건을 넘는 경우 이용할 수 없습니다..";			
+		}
+		
+		if(messList.size() > 0 && userList.size() != messList.size()){
+			code = "5000";
+			message = "대상자 수와 메시지 수가 일치하지 않습니다.";
+		} 
+		if(fileList.size() > 0 && userList.size() != fileList.size()){
+			code = "5000";
+			message = "대상자 수와 첨부이미지 수가 일치하지 않습니다.";
+		} 
+		if(linkList.size() > 0 && userList.size() != linkList.size()){
+			code = "5000";
+			message = "대상자 수와 웹링크 수가 일치하지 않습니다.";
+		} 		
+		if(titleList.size() > 0 && userList.size() != titleList.size()){
+			code = "5000";
+			message = "대상자 수와 타이틀 수가 일치하지 않습니다.";
+		} 					
+		
+		if(!code.equals("200")){
+			JSONObject obj = new JSONObject();
+			obj.put("code", code);
+			obj.put("message", message);
+			return obj.toString();
+		}else{
+	        // 파라미터 설정
+	        List <BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(); 
+	        params = setParams(push, params);		        // 푸시 메시지 기본 정보 셋팅
+	        
+	        push.setMsg(messList.get(0));																// 첫번째 메시지가 기본 메시지가 됨.
+	        params.add (new BasicNameValuePair("msg", push.getMsg()));			// 메시지 셋팅 (필수) - 동일 메시지
+	        
+	        // 대상자 설정
+	        for(int i=0; i<userList.size(); i++)
+	        	params.add (new BasicNameValuePair("identity", (String)userList.get(i)));
+	        
+	        if(messList != null){
+		        // 대상자별 메시지 설정
+		        for(int i=0; i<messList.size(); i++)
+		        	params.add (new BasicNameValuePair("message", (String)messList.get(i)));      
+	        }        
+	        if(fileList != null){
+		        // 대상자별 이미지 링크 설정
+		        for(int i=0; i<fileList.size(); i++)
+		        	params.add (new BasicNameValuePair("prv_attachfname", (String)fileList.get(i)));
+	        }        
+	        if(linkList != null){
+		        // 대상자별 웹 링크 설정
+		        for(int i=0; i<linkList.size(); i++)
+		        	params.add (new BasicNameValuePair("prv_linkurl", (String)linkList.get(i)));
+	        }
+	        if(titleList != null){
+		        // 대상자별 타이틀 설정
+		        for(int i=0; i<linkList.size(); i++)
+		        	params.add (new BasicNameValuePair("prv_title", (String)titleList.get(i)));
+	        }               
+	        
+	        // 메시지 전송 완료 플래그 설정
+	        params.add (new BasicNameValuePair("isfinish", "Y"));									// 발송 완료 처리
+	        	      
+	        jsonString = sendHttpsUrlConExe(push.getCallUrl(), params);
+						
+		    return jsonString;
+		}		
+	}
+
+
+
+	@Override
 	public String sendTargetMore(PushVO push, ArrayList<String> userList, ArrayList<String> messList)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException, JSONException {
-		return sendTargetMoreProc(push, userList, messList, new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>());
+			return sendTargetMoreProc(push, userList, messList, new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>());
 	}
 	
 	@Override
@@ -276,8 +372,8 @@ public class FingerpushDaoImpl implements FingerpushDao{
         params.add (new BasicNameValuePair("fnm", push.getFnm()));					// 첨부이미지 파일 링크 경로  (선택)
         params.add (new BasicNameValuePair("send_state", push.getSend_state()));// 발송 상태 : 0001 즉시발송, 0002 예약발송
         if(push.getSend_state().equals("0002"))   params.add (new BasicNameValuePair("senddate", push.getSenddate()));	  // 발송 시간(예약발송일 경우) yyyymmdd24Hmin
-	params.add (new BasicNameValuePair("link", push.getLink()));					// 웹 링크 경로
-	
+        params.add (new BasicNameValuePair("link", push.getLink()));					// 웹 링크 경로
+		
     	// V3.0 추가 내용
         params.add (new BasicNameValuePair("title", push.getTitle()));					// 제목
         params.add (new BasicNameValuePair("bgcolor", push.getBgcolor()));		// 배경 컬러 RGB 값 :  ex) #FF0000
@@ -639,5 +735,30 @@ public class FingerpushDaoImpl implements FingerpushDao{
         jsonString = sendHttpsUrlConExe(push.getCallUrl(), params); // 2016-06-08
 		return jsonString;
 	}
+	
+	/**
+	 * 푸시 발송 예약 후 해당 푸시 메시지 취소. 푸시 메시지가 '대기' 혹은 '일시정지'일 경우에만 취소가 가능 함.
+	 * @param push
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 * @throws KeyManagementException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
+	@Override
+	public String cnclPushMess(PushVO push)
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException {
+		String jsonString  = "";			// 서버로 발송 후 결과 메시지
+		
+        List <BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(); 
+        params = setParams(push, params);																	// 푸시 메시지 기본 정보 셋팅
+        params.add (new BasicNameValuePair("msgidx", push.getMsgIdx()));				// 메시지 번호 셋팅 (필수)
+        params.add (new BasicNameValuePair("mode", push.getMode()));					// 메시지 유형 셋팅 (필수)
+        
+        jsonString = sendHttpsUrlConExe(push.getCallUrl(), params);
+		return jsonString;
+	}
+	
+	
 		
 }
