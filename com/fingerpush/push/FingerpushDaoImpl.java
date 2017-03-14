@@ -37,16 +37,25 @@ import java.net.HttpURLConnection;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
 
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 
 public class FingerpushDaoImpl implements FingerpushDao{
 	Logger logger;
+	String source = "";
 	
 	public FingerpushDaoImpl(){
 		super();
 		logger = Logger.getLogger("FingerpushDaoImpl");		
 	}
 	
-	
+	public FingerpushDaoImpl(String source){
+		super();
+		logger = Logger.getLogger("FingerpushDaoImpl");
+		this.source  = source;
+	}	
 	
 	@Override
 	public String sendAllDevice(PushVO push)
@@ -55,14 +64,15 @@ public class FingerpushDaoImpl implements FingerpushDao{
 		
         List <BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(); 
         params = setParams(push, params);															// 푸시 메시지 기본 정보 셋팅
+        if(!source.equals("")) params.add (new BasicNameValuePair("source", source));	
         params.add (new BasicNameValuePair("msg", push.getMsg()));				// 메시지 셋팅 (필수)   
         params.add (new BasicNameValuePair("mode", push.getMode()));			// 메시지 모드 DEFT 기본 /LNGT
         if(push.getMode().equals("LNGT")) params.add (new BasicNameValuePair("lngt_message", push.getLngt_message()));        
         params.add(new BasicNameValuePair("tag", push.getTag()));					// 태그 검색시 태그 : ' , ' 로 구분
         params.add(new BasicNameValuePair("beschmode", push.getBeschmode()));	// 태그 검색시 태그 : ' , ' 로 구분
         
-        //jsonString = sendHttpsExe(push.getCallUrl(), params);			// DefaultHttpClient  deprecated
-        jsonString = sendHttpsUrlConExe(push.getCallUrl(), params); 
+        jsonString = sendHttpsUrlConExe(push.getCallUrl(), params);        
+        
 		return jsonString;
 	}
 
@@ -76,11 +86,17 @@ public class FingerpushDaoImpl implements FingerpushDao{
         // 파라미터 설정
         List <BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(); 
         params = setParams(push, params);															// 푸시 메시지 기본 정보 셋팅
-                
+        if(!source.equals("")) params.add (new BasicNameValuePair("source", source));
         params.add (new BasicNameValuePair("msg", push.getMsg()));				// 메시지 셋팅 (필수)   
         params.add (new BasicNameValuePair("identity", push.getIdentity()));      // 대상자 셋팅  (필수)
         
-        jsonString = sendMessage(push.getCallUrl(), params);								// 발송 후 결과 수신
+        // SMS 서비스 사용자의 경우에만 해당 됨
+        if(push.getBesms().equals("Y")){
+	        params.add (new BasicNameValuePair("besms", "Y"));      // 대상자의 발송 실패시 SMS를 수신받을 전화번호
+	        params.add (new BasicNameValuePair("hp", push.getHp()));      // 대상자의 발송 실패시 SMS를 수신받을 전화번호
+        }
+        
+        jsonString = sendMessage(push.getCallUrl(), params);								// 발송 후 결과 수신        
         
 		return jsonString;
 	}	
@@ -144,6 +160,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	        params = setParams(push, params);		        // 푸시 메시지 기본 정보 셋팅
 	        
 	        push.setMsg(messList.get(0));																// 첫번째 메시지가 기본 메시지가 됨.
+	        if(!source.equals("")) params.add (new BasicNameValuePair("source", source));
 	        params.add (new BasicNameValuePair("msg", push.getMsg()));			// 메시지 셋팅 (필수) - 동일 메시지
 	        
 	        // 대상자 설정
@@ -209,7 +226,9 @@ public class FingerpushDaoImpl implements FingerpushDao{
 			ArrayList<String> fileList = new ArrayList<String>();
 			ArrayList<String> linkList = new ArrayList<String>();
 			ArrayList<String> titleList = new ArrayList<String>();
+			ArrayList<String> hpList = new ArrayList<String>(); 						// 2017-01-10
 			
+			String tmpHp = "";
 			for(int i=0; i<paramList.size(); i++){
 				 Map<String, String> tmpMap = paramList.get(i);
 				 userList.add((String)tmpMap.get("identity"));
@@ -217,6 +236,11 @@ public class FingerpushDaoImpl implements FingerpushDao{
 				 fileList.add((String)tmpMap.get("imgLink"));
 				 linkList.add((String)tmpMap.get("link"));
 				 titleList.add((String)tmpMap.get("title"));
+				 if(push.getBesms().equals("Y")){											// 2017-01-10
+					 tmpHp = tmpMap.get("hp");
+					 if(tmpHp != null && !tmpHp.equals("")) hpList.add(tmpHp); 	
+					 else hpList.add("-");															// 전화번호가 없는 경우
+				 }
 			}
 			
 			if(messList.size() > 0 && userList.size() != messList.size()){
@@ -234,27 +258,60 @@ public class FingerpushDaoImpl implements FingerpushDao{
 			if(titleList.size() > 0 && userList.size() != titleList.size()){
 				code = "5000";
 				message = "대상자 수와 타이틀 수가 일치하지 않습니다.";
-			} 					
+			} 	
+			// 20161229
+			if(push.getBesms().equals("Y")){
+				if(hpList.size() > 0 && userList.size() != titleList.size()){
+					code = "5000";
+					message = "대상자 수와 전화번호 수가 일치하지 않습니다.";
+				} 						
+			}
 			
 			if(!code.equals("200")){
 				JSONObject obj = new JSONObject();
 				obj.put("code", code);
 				obj.put("message", message);
 				return obj.toString();
-			}else return sendTargetMoreProc(push, userList, messList, fileList, linkList, titleList);
+			//}else return sendTargetMoreProc(push, userList, messList, fileList, linkList, titleList);
+			}else return sendTargetMoreProc(push, userList, messList, fileList, linkList, titleList, hpList); // 20161229
 	}
 
 
     
 	private String sendTargetMoreProc(PushVO push, ArrayList<String> userList, ArrayList<String> messList, ArrayList<String> fileList, ArrayList<String> linkList, ArrayList<String> titleList) 
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException, JSONException {
+		return sendTargetMoreProc(push, userList, messList, fileList,  linkList,  titleList, null);
+	}
+	
+	/**
+	 * 20161229
+	 * @param push
+	 * @param userList
+	 * @param messList
+	 * @param fileList
+	 * @param linkList
+	 * @param titleList
+	 * @param hpList
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 * @throws KeyManagementException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	private String sendTargetMoreProc(PushVO push, ArrayList<String> userList, ArrayList<String> messList, ArrayList<String> fileList, ArrayList<String> linkList, ArrayList<String> titleList, ArrayList<String> hpList) 
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException, JSONException {
 		String jsonString = "";
         // 파라미터 설정
         List <BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(); 
         params = setParams(push, params);		        // 푸시 메시지 기본 정보 셋팅
-        
+                
         push.setMsg(messList.get(0));																// 첫번째 메시지가 기본 메시지가 됨.
+        if(!source.equals("")) params.add (new BasicNameValuePair("source", source));
         params.add (new BasicNameValuePair("msg", push.getMsg()));			// 메시지 셋팅 (필수) - 동일 메시지
+
+        // SMS 서비스 사용자의 경우에만 해당 됨. : 20161229 추가
+        if(push.getBesms().equals("Y")) params.add (new BasicNameValuePair("besms", "Y"));      // 대상자의 발송 실패시 SMS를 수신받을 전화번호        
         
 		// >>>>>>>>>>>>>>>>>>> step 1. 메시지 등록 - 등록 후 메시지 번호 확인.( 해당 메시지 번호는 단계별 발송에 반드시 필요합니다)
 		jsonString = sendMessage(push.getCallUrl(), params);		
@@ -265,8 +322,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	    String processCode = (String)jsonObj.get("processCode");		// 메시지 발송 단계, 20001 메시지 등록 시작, 20002 대상자 설정, 20003 메시지 설정 완료
 	    String message = (String)jsonObj.get("message");					// 반환된 결과 메시지        
 	    
-	    push.setMsgIdx(msgIdx);															// 메시지 번호를 셋팅 한다.  (필수)
-	        
+	    push.setMsgIdx(msgIdx);															// 메시지 번호를 셋팅 한다.  (필수)	        
 	    
 	    // >>>>>>>>>>>>>>>>>> step 2. 대상자 발송 : 500 건씩 나누어 발송 한다 (500건-한번에 등록 가능한 식별자 수 --> 중요)
 	    if(result.equals("200") && processCode.equals("20001")){
@@ -276,9 +332,13 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	    	List<ArrayList<String>> departFileList = null;
 	    	List<ArrayList<String>> departLinkList = null;
 	    	List<ArrayList<String>> departTitleList = null;
+	    	List<ArrayList<String>> departHpList = null;
 	    	if(fileList != null && fileList.size() > 0)  departFileList = separateArray(fileList, 500);					// 대상자별 이미지파일 나누기
 	    	if(linkList != null && linkList.size() > 0)  departLinkList = separateArray(linkList, 500);				// 대상자별 웹링크 나누기
 	    	if(titleList != null && titleList.size() > 0)  departTitleList = separateArray(titleList, 500);				// 대상자별 타이틀 나누기
+	    	if(push.getBesms().equals("Y")){	
+	    		if(hpList != null && hpList.size() > 0)  departHpList = separateArray(hpList, 500);						// 대상자별 전화번호 나누기
+	    	}
 	    	
 	    	//logger.debug("action count : "+departList.size());   	
 	    	
@@ -288,14 +348,24 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	    		ArrayList<String> attachFileList = null;
 	    		ArrayList<String> prv_linkList = null;
 	    		ArrayList<String> prv_titleList = null;
+	    		ArrayList<String> prv_hpList = null;
 	    		if(departFileList != null && departFileList.size() > 0)  attachFileList = departFileList.get(i);
 	    		if(departLinkList != null && departLinkList.size() > 0)  prv_linkList = departLinkList.get(i);
-	    		if(departTitleList != null && departTitleList.size() > 0)  prv_titleList = departTitleList.get(i);
+	    		if(departLinkList != null && departTitleList.size() > 0)  prv_titleList = departTitleList.get(i);
+	    		if(push.getBesms().equals("Y")){	
+	    			if(departHpList != null && departHpList.size() > 0)  prv_hpList = departHpList.get(i);
+	    		}
 	    		
 	    		// 대상자 및 메시지를 발송 하고 결과 값을 받는다.
 	    		String tmpMessage = "";
-	    		if(attachFileList != null) tmpMessage = sendTargetList(push, targetList, messageList, attachFileList, prv_linkList, prv_titleList);
-	    		else  tmpMessage = sendTargetList(push, targetList, messageList);
+	    		
+	    		if(push.getBesms().equals("Y")){	
+	    			if(attachFileList != null) tmpMessage = sendTargetList(push, targetList, messageList, attachFileList, prv_linkList, prv_titleList, prv_hpList);
+	    			else  tmpMessage = sendTargetList(push, targetList, messageList, prv_hpList);
+	    		}else{
+	    			if(attachFileList != null) tmpMessage = sendTargetList(push, targetList, messageList, attachFileList, prv_linkList, prv_titleList, null);
+	    			else  tmpMessage = sendTargetList(push, targetList, messageList);
+	    		}
 	    		
 	    		jsonObj = JSONObject.fromObject(tmpMessage);
 	    	    logger.debug("target process : "+tmpMessage);
@@ -322,7 +392,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	    }	
         
 		return jsonString;
-	}
+	}	
 	
 	// 발송 완료 처리
 	public String sendFinish(PushVO push)
@@ -338,6 +408,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
         
         params.add (new BasicNameValuePair("msgidx",push.getMsgIdx()));					 		// 발급받은 message id 를 넣어 준다.  (필수)
         params.add (new BasicNameValuePair("isfinish", "Y"));									// 발송 완료 처리
+        if(!source.equals("")) params.add (new BasicNameValuePair("source", source));
         
         //jsonString = sendHttpsExe(push.getCallUrl(), params);					// DefaultHttpClient  deprecated
         jsonString = sendHttpsUrlConExe(push.getCallUrl(), params);	
@@ -426,11 +497,31 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	private String sendTargetList(PushVO push, ArrayList<String> targetList, ArrayList<String> messList)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException
 	{
-		return	sendTargetList(push, targetList, messList, null, null, null);
+		//return	sendTargetList(push, targetList, messList, null, null, null);			// 20161229  
+		return	sendTargetList(push, targetList, messList, null, null, null, null);
 	}	
+	
+	/**
+	 * 20161229 최초작성
+	 * @param push
+	 * @param targetList
+	 * @param messList
+	 * @param hpList
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 * @throws KeyManagementException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
+	private String sendTargetList(PushVO push, ArrayList<String> targetList, ArrayList<String> messList, ArrayList<String> hpList)
+			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException
+	{
+		return	sendTargetList(push, targetList, messList, null, null, null, hpList);
+	}		
 	// 대상 리스트 발송 : 다중 건일 경우 - 개별 첨부파일 추가
 	/**
 	 * 대상 리스트 발송
+	 * 20161229 : hpList 추가
 	 * @param strAppkey
 	 * @param strAppSecret
 	 * @param strCustomerKey
@@ -439,13 +530,14 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	 * @param targetList
 	 * @param messList
 	 * @param fileList
+	 * @param hpList
 	 * @return
 	 * @throws NoSuchAlgorithmException
 	 * @throws KeyManagementException
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 */
-	private String sendTargetList(PushVO push, ArrayList<String> targetList, ArrayList<String> messList, ArrayList<String> fileList, ArrayList<String> linkList, ArrayList<String> titleList)
+	private String sendTargetList(PushVO push, ArrayList<String> targetList, ArrayList<String> messList, ArrayList<String> fileList, ArrayList<String> linkList, ArrayList<String> titleList, ArrayList<String> hpList)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException
 	{
 		String jsonString  = "";
@@ -457,7 +549,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
         params.add (new BasicNameValuePair("customerkey",push.getCustomerKey()));		//  (필수)
         
         params.add (new BasicNameValuePair("msgidx",push.getMsgIdx()));					 		// 발급받은 message id 를 넣어 준다.  (필수)
-        
+        if(!source.equals("")) params.add (new BasicNameValuePair("source", source));
         // 대상자 설정
         for(int i=0; i<targetList.size(); i++)
         	params.add (new BasicNameValuePair("identity", (String)targetList.get(i)));
@@ -482,6 +574,11 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	        for(int i=0; i<linkList.size(); i++)
 	        	params.add (new BasicNameValuePair("prv_title", (String)titleList.get(i)));
         }               
+        if(hpList != null){
+	        // 대상자별 전화번호 설정
+	        for(int i=0; i<hpList.size(); i++)
+	        	params.add (new BasicNameValuePair("prv_hp", (String)hpList.get(i)));
+        }           
         
 		//jsonString = sendHttpsExe(push.getCallUrl(), params);				// DefaultHttpClient  deprecated
 		jsonString = sendHttpsUrlConExe(push.getCallUrl(), params);		        
@@ -527,7 +624,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 	}
 
 	/**
-	 * HttpClient 를 이용한 HTTPS 로 파라미터 전송
+	 * HttpClient 를 이용한 HTTPS 로 파라미터 전송 - deprecated
 	 * 
 	 * @param callUrl
 	 * @param params
@@ -609,7 +706,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
 		
 		return jsonString;			
 	}
-	
+
 	/**
 	 * HttpsURLConnect 사용 하여 HTTPS 처리함.
 	 * 2016-06-08
@@ -731,8 +828,8 @@ public class FingerpushDaoImpl implements FingerpushDao{
         params.add (new BasicNameValuePair("msgidx", push.getMsgIdx()));				// 메시지 번호 셋팅 (필수)
         params.add (new BasicNameValuePair("page", ""+pageNo));								// 조회할 페이지 번호
         
-        //jsonString = sendHttpsExe(push.getCallUrl(), params);
-        jsonString = sendHttpsUrlConExe(push.getCallUrl(), params); // 2016-06-08
+        jsonString = sendHttpsExe(push.getCallUrl(), params);
+        //jsonString = sendHttpsUrlConExe(push.getCallUrl(), params); // 2016-06-08
 		return jsonString;
 	}
 	
@@ -758,7 +855,5 @@ public class FingerpushDaoImpl implements FingerpushDao{
         jsonString = sendHttpsUrlConExe(push.getCallUrl(), params);
 		return jsonString;
 	}
-	
-	
 		
 }
