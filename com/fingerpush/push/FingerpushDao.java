@@ -1,12 +1,15 @@
 package com.fingerpush.push;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.message.BasicNameValuePair;
 
 public interface FingerpushDao {
 	/**
@@ -117,16 +120,17 @@ public interface FingerpushDao {
 	public String cnclPushMess(PushVO push)
 			throws NoSuchAlgorithmException, KeyManagementException, ClientProtocolException, IOException;
 
-  	/**  
-	* HTTPS 프로토콜을 이용하여 파라미터를 전송하고 결과를 json 으로 받아 반환  
-	* @param callUrl  
-	* @param params  
-	* @return  
-	* @throws IOException  
-	* @throws NoSuchAlgorithmException  
-	* @throws KeyManagementException  
-	* @throws MalformedURLException  
-	*/ 
-	public String sendHttpsUrlConExe(String callUrl, List <BasicNameValuePair> params)   
-		throws IOException, NoSuchAlgorithmException, KeyManagementException, MalformedURLException;
+	
+	/**
+	 * HTTPS 프로토콜을 이용하여 파라미터를 전송하고 결과를 json 으로 받아 반환
+	 * @param callUrl
+	 * @param params
+	 * @return
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException
+	 * @throws KeyManagementException
+	 * @throws MalformedURLException
+	 */
+	public String sendHttpsUrlConExe(String callUrl, List <BasicNameValuePair> params)
+			throws IOException, NoSuchAlgorithmException, KeyManagementException, MalformedURLException;
 }
