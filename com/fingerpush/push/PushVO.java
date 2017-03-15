@@ -5,7 +5,11 @@ package com.fingerpush.push;
  * @author pandaO_OBae
  * 메시지 관련 VO 객체 
  */
-public class PushVO {
+/**
+ * @author seungjin
+ *
+ */
+public class PushVO {	
 	private String callUrl;
 	
 	private String appKey;
@@ -34,6 +38,8 @@ public class PushVO {
 	private String lngt_message;	// 롱텍스트 메시지										 --> 일괄 발송에 해당
 	private String tag;					// 태그 발송 												 --> 일괄 발송에 해당
 	private String beschmode;		// 태그 검색 모드 And/or -> 0001/0002
+	private String besms;				// 푸시 발송 실패시 SMS로 발송 여부 : 2016-12-29 추가
+	private String hp;					// 수신자의 handphone number
 	
 	// V3.0 추가 내용
 	private String title;						// 타이틀
@@ -262,6 +268,23 @@ public class PushVO {
 
 	public void setTag(String tag) {
 		this.tag = tag;
+	}
+	
+	public String getHp() {
+		return ifNull(hp, "");
+	}
+
+	public void setHp(String hp) {
+		hp = hp.replace("-", "");
+		this.hp = hp;
+	}
+
+	public String getBesms() {
+		return ifNull(besms, "");
+	}
+
+	public void setBesms(String besms) {
+		this.besms = besms;
 	}
 
 	public String getBeschmode() {
