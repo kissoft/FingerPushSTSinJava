@@ -828,8 +828,7 @@ public class FingerpushDaoImpl implements FingerpushDao{
         params.add (new BasicNameValuePair("msgidx", push.getMsgIdx()));				// 메시지 번호 셋팅 (필수)
         params.add (new BasicNameValuePair("page", ""+pageNo));								// 조회할 페이지 번호
         
-        jsonString = sendHttpsExe(push.getCallUrl(), params);
-        //jsonString = sendHttpsUrlConExe(push.getCallUrl(), params); // 2016-06-08
+        jsonString = sendHttpsUrlConExe(push.getCallUrl(), params);
 		return jsonString;
 	}
 	
@@ -854,6 +853,5 @@ public class FingerpushDaoImpl implements FingerpushDao{
         
         jsonString = sendHttpsUrlConExe(push.getCallUrl(), params);
 		return jsonString;
-	}
-		
+	}		
 }
