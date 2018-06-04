@@ -22,7 +22,7 @@
 	FingerpushDao pushDao = new FingerpushDaoImpl();
 	
 	// 필수값 셋팅
-	push.setCallUrl("https://api.fingerpush.com/rest/sts/v3/setSTSPushs.jsp");					// API 호출 경로	: 개발서버
+	push.setCallUrl("https://api-v2.fingerpush.com/rest/sts/v3/setSTSPushs.jsp");					// API 호출 경로	: 개발서버
 	push.setAppKey("");																					// 발급받은 Appkey
 	push.setAppSecret("");																			// 발급받은 AppSecret
 	push.setCustomerKey("");																	// 발급 받은 customer key - Pro 이상의 서비스 사용시
