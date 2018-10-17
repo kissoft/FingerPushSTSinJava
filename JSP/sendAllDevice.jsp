@@ -54,7 +54,7 @@
 	push.setIsetiquette("Y");			// 에티켓 시간 적용 여부 Y 적용, N 적용 안함.
 	push.setEtiquette_stime("20");	// 에티켓 적용 시작 시간 0~23
 	push.setEtiquette_etime("09");	// 에티켓 적용 해제 시간 0~23
-	push.setLabel_code("hxJBeF2muh3");			// 메시지 라벨코드 : 메시지 라벨관리에서 발급받은 10자리 난수
+	push.setLabel_code("hxJBeF2muh");			// 메시지 라벨코드 : 메시지 라벨관리에서 발급받은 10자리 난수
 	push.setAnd_priority("M");			// 안드로이드 우선순위 H : 높음 / M : 중간(default)	
 	push.setOptagree("0000");		// 옵션 동의 : 0000  광고수신 비동의 여부에 관계없이 발송, 1000 광고수신동의	한사람에게만 발송
 	//push.setSendspeed("4");
